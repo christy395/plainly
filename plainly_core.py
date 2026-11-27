@@ -559,22 +559,35 @@ def run_source(source, max_steps=MAX_STEPS):
     return "\n".join(output) + ("\n" if output else "")
 
 
-def run_file(path):
+def read_source_file(path):
     import os
     import stat
+    if os.path.islink(path):
+        raise PlainlyCoreError("source path must not be a symbolic link")
     info = os.stat(path)
     if not stat.S_ISREG(info.st_mode):
         raise PlainlyCoreError("source path must be a regular file")
     if info.st_size > MAX_SOURCE_BYTES:
         raise PlainlyCoreError("source is larger than the 1 MiB limit")
-    with open(path, "r", encoding="utf-8") as handle:
-        source = handle.read(MAX_SOURCE_BYTES + 1)
+    try:
+        with open(path, "r", encoding="utf-8") as handle:
+            source = handle.read(MAX_SOURCE_BYTES + 1)
+    except UnicodeError:
+        raise PlainlyCoreError("source file must contain valid UTF-8 text")
     if len(source.encode("utf-8")) > MAX_SOURCE_BYTES:
         raise PlainlyCoreError("source is larger than the 1 MiB limit")
-    return run_source(source)
+    return source
+
+
+def check_file(path):
+    return check_source(read_source_file(path))
+
+
+def run_file(path):
+    return run_source(read_source_file(path))
 
 
 __all__ = [
     "VERSION", "PlainlyCoreError", "Program", "tokenize", "parse",
-    "check_source", "run_source", "run_file",
+    "check_source", "run_source", "read_source_file", "check_file", "run_file",
 ]
