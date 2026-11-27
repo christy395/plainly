@@ -38,7 +38,13 @@ class CoreBytecodeTests(unittest.TestCase):
         self.assertBothBackends("say no and missing_name\nsay yes and yes\n", "no\nyes\n")
 
     def test_short_circuit_or(self):
-        self.assertBothBackends("say yes or missing_name\nsay no or yes\n", "yes\nyes\n")
+        self.assertBothBackends("say yes or missing_name\nsay no or yes\nsay 2\n", "yes\nyes\n2\n")
+
+    def test_boolean_operators_validate_right_operand(self):
+        for source in ("say yes and 3\n", "say no or 3\n"):
+            with self.subTest(source=source):
+                with self.assertRaisesRegex(core.PlainlyCoreError, "yes/no"):
+                    bytecode.run_source(source)
 
     def test_nested_repeat_and_conditionals(self):
         self.assertBothBackends(
