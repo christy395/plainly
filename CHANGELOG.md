@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.3.0
+
+- Add basic Discord Gateway and Telegram Bot API text-message integrations with per-app token environment variables.
+- Add Plainly bot permission statements, message fields, reply handlers, and bot start statements.
+- Add provider-configurable website bind address, port override, hostname allowlist, and /healthz endpoint.
+- Add plainly_host.py, a per-app child-process adapter with status, logs, stop operations, and a reduced child environment.
+- Add mocked bot integration tests and hosting/provider lifecycle tests.
+- Document provider integration requirements and the external OS/container isolation still required before accepting untrusted programs.
+
 ## 1.2.0
 
 - Add a versioned binary `.pbc` bytecode format and a dedicated Plainly virtual machine.
