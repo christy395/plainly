@@ -23,6 +23,7 @@
 
 ## Unreleased
 
+- Avoid reverse-DNS lookups during HTTP server startup; the listener now uses its numeric bound address for server metadata, preventing macOS startup hangs without requiring DNS.
 - Make Discord bot shutdown responsive to provider stop events instead of waiting for a full Gateway heartbeat interval.
 - Validate hosting process stop timeouts and reject booleans, non-finite values, strings, negative values, and excessive waits.
 - Add regression coverage for prompt Discord shutdown and invalid provider stop timeouts.
