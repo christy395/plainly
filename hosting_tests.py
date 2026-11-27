@@ -27,13 +27,13 @@ def free_port():
     return port
 
 
-def request(port, path, host):
+def request(port, path, host, timeout=3):
     req = urllib.request.Request(
         "http://127.0.0.1:%d%s" % (port, path),
         headers={"Host": "%s:%d" % (host, port)},
     )
     try:
-        with LOCAL_OPENER.open(req, timeout=3) as response:
+        with LOCAL_OPENER.open(req, timeout=timeout) as response:
             return response.status, response.read().decode("utf-8")
     except urllib.error.HTTPError as exc:
         return exc.code, exc.read().decode("utf-8")
@@ -68,30 +68,41 @@ class HostingTests(unittest.TestCase):
             "reply with the words Hosted with Plainly end words\n"
             "end when\n"
             "start the server on port 8099\n")
+        child_env = dict(os.environ, PYTHONUNBUFFERED="1")
         process = subprocess.Popen(
             [sys.executable, PLAINLY, "run", path,
              "--host", "127.0.0.1", "--port", str(port), "--allow-host", "example.test"],
-            cwd=self.directory, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            cwd=self.directory, env=child_env, stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE, text=True, bufsize=1)
         self.processes.append(process)
-        deadline = time.time() + 5
+        deadline = time.monotonic() + 12
         status, body = 0, ""
-        while time.time() < deadline:
+        last_error = None
+        while time.monotonic() < deadline:
             if process.poll() is not None:
                 stdout, stderr = process.communicate(timeout=2)
                 self.fail("Plainly website process exited before becoming ready. stdout=%r stderr=%r" %
                           (stdout, stderr))
             try:
-                status, body = request(port, "/healthz", "example.test")
+                status, body = request(port, "/healthz", "example.test", timeout=0.75)
                 if status == 200:
                     break
             except Exception as exc:
                 # Connection refused is expected briefly while the HTTP
-                # listener is starting; any other error is retried until
-                # the deadline so the failure below remains deterministic.
+                # listener is starting. Retry briefly so slower CI runners
+                # do not make this test flaky.
                 last_error = exc
             time.sleep(0.05)
-        self.assertEqual((status, body), (200, "ok"),
-                         "website did not become ready; last error: %r" % locals().get("last_error"))
+        if (status, body) != (200, "ok"):
+            if process.poll() is None:
+                process.terminate()
+            try:
+                stdout, stderr = process.communicate(timeout=3)
+            except subprocess.TimeoutExpired:
+                process.kill()
+                stdout, stderr = process.communicate(timeout=3)
+            self.fail("website did not become ready; last error: %r; stdout=%r; stderr=%r" %
+                      (last_error, stdout, stderr))
         self.assertEqual(request(port, "/", "example.test"), (200, "Hosted with Plainly"))
         self.assertEqual(request(port, "/", "attacker.test")[0], 403)
 
