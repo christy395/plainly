@@ -33,6 +33,7 @@ jobs:
         run: |
           python plainly.py compile hello.plain
           python plainly.py execute hello.pbc
+          python plainly.py execute hello.pbc
       - name: Check and run the first example
         run: |
           python plainly.py check hello.plain
