@@ -428,7 +428,7 @@ plainly compile hello.plain
 plainly execute hello.pbc
 ```
 
-The compiler creates the `.pbc` file next to the source file. For example, compiling `hello.plain` creates `hello.pbc`. The file starts with the Plainly bytecode signature, includes a format version and integrity checksum, and stores VM instructions and function metadata in binary form. You can copy the `.pbc` file to another compatible Plainly installation and execute it there.
+The compiler creates the `.pbc` file next to the source file. For example, compiling `hello.plain` creates `hello.pbc`. A precompiled `hello.pbc` demonstration is also included in the repository root. The file starts with the Plainly bytecode signature, includes a format version and integrity checksum, and stores VM instructions and function metadata in binary form. You can copy the `.pbc` file to another compatible Plainly installation and execute it there.
 
 ### Bytecode version 1 support
 
