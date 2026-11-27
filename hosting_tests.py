@@ -8,15 +8,10 @@ import sys
 import tempfile
 import time
 import unittest
-import urllib.error
-import urllib.request
-
 import plainly_host
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 PLAINLY = os.path.join(ROOT, "plainly.py")
-# Local test traffic must not be routed through CI proxy environment settings.
-LOCAL_OPENER = urllib.request.build_opener(urllib.request.ProxyHandler({}))
 
 
 def free_port():
@@ -28,15 +23,28 @@ def free_port():
 
 
 def request(port, path, host, timeout=3):
-    req = urllib.request.Request(
-        "http://127.0.0.1:%d%s" % (port, path),
-        headers={"Host": "%s:%d" % (host, port)},
-    )
-    try:
-        with LOCAL_OPENER.open(req, timeout=timeout) as response:
-            return response.status, response.read().decode("utf-8")
-    except urllib.error.HTTPError as exc:
-        return exc.code, exc.read().decode("utf-8")
+    """Make a direct HTTP request to loopback without consulting proxy settings."""
+    payload = (
+        "GET %s HTTP/1.1\\r\\nHost: %s:%d\\r\\n"
+        "Connection: close\\r\\n\\r\\n" % (path, host, port)
+    ).encode("ascii")
+    with socket.create_connection(("127.0.0.1", port), timeout=timeout) as connection:
+        connection.settimeout(timeout)
+        connection.sendall(payload)
+        chunks = []
+        while True:
+            chunk = connection.recv(8192)
+            if not chunk:
+                break
+            chunks.append(chunk)
+    response = b"".join(chunks)
+    header, separator, body = response.partition(b"\\r\\n\\r\\n")
+    if not separator:
+        raise RuntimeError("local HTTP server returned an incomplete response")
+    status_line = header.split(b"\\r\\n", 1)[0].split()
+    if len(status_line) < 2:
+        raise RuntimeError("local HTTP server returned an invalid status line")
+    return int(status_line[1]), body.decode("utf-8")
 
 
 class HostingTests(unittest.TestCase):
@@ -94,6 +102,17 @@ class HostingTests(unittest.TestCase):
                 last_error = exc
             time.sleep(0.05)
         if (status, body) != (200, "ok"):
+            diagnostics = []
+            if sys.platform == "darwin" and process.poll() is None:
+                for command in (
+                    ["ps", "-o", "pid=,stat=,command=", "-p", str(process.pid)],
+                    ["lsof", "-nP", "-a", "-p", str(process.pid), "-iTCP"],
+                ):
+                    try:
+                        result = subprocess.run(command, capture_output=True, text=True, timeout=3)
+                        diagnostics.append(result.stdout.strip() or result.stderr.strip())
+                    except (OSError, subprocess.SubprocessError) as exc:
+                        diagnostics.append(repr(exc))
             if process.poll() is None:
                 process.terminate()
             try:
@@ -101,8 +120,8 @@ class HostingTests(unittest.TestCase):
             except subprocess.TimeoutExpired:
                 process.kill()
                 stdout, stderr = process.communicate(timeout=3)
-            self.fail("website did not become ready; last error: %r; stdout=%r; stderr=%r" %
-                      (last_error, stdout, stderr))
+            self.fail("website did not become ready; last error: %r; stdout=%r; stderr=%r; diagnostics=%r" %
+                      (last_error, stdout, stderr, diagnostics))
         self.assertEqual(request(port, "/", "example.test"), (200, "Hosted with Plainly"))
         self.assertEqual(request(port, "/", "attacker.test")[0], 403)
 
