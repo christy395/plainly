@@ -100,6 +100,7 @@ Parentheses group expressions. The and and or operators short-circuit. Condition
 The first core includes these built-in functions:
 
 - length(value) accepts text or a list.
+- at(list, position) returns a list item using a one-based whole-number position and reports an error when the position is invalid.
 - sqrt(number) returns the square root of a non-negative number.
 - absolute(number) returns the absolute value.
 - largest(list) and smallest(list) accept non-empty lists of numbers.
