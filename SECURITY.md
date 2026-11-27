@@ -42,7 +42,16 @@ Plainly rejects path separators and hidden-file names in its file permission syn
 
 These checks reduce accidental or simple link-based escapes. They do not make a shared working directory safe: other filesystem races, platform differences, mount behavior, and host-level permissions still matter. Use a private directory for every program.
 
-## Independent core defense-in-depth controls in 1.5.0\n\n- The core validates execution-budget arguments and enforces an upper bound on instruction steps.\n- It caps variable declarations, aggregate runtime values, nested list sizes, retained text, and cumulative output.\n- It opens source files by descriptor, verifies regular-file type with `fstat`, enforces the byte limit while reading, requires strict UTF-8, and uses `O_NOFOLLOW` where supported.\n- Regression tests cover invalid budgets, aggregate text growth, symlink rejection on platforms with `O_NOFOLLOW`, and malformed UTF-8.\n\nThese are defense-in-depth checks inside one process, not a substitute for OS isolation.\n\n## Known limitations and review targets
+## Independent core defense-in-depth controls in 1.5.0
+
+- The core validates execution-budget arguments and enforces an upper bound on instruction steps.
+- It caps variable declarations, aggregate runtime values, nested list sizes, retained text, and cumulative output.
+- It opens source files by descriptor, verifies regular-file type with `fstat`, enforces the byte limit while reading, requires strict UTF-8, and uses `O_NOFOLLOW` where supported.
+- Regression tests cover invalid budgets, aggregate text growth, symlink rejection on platforms with `O_NOFOLLOW`, and malformed UTF-8.
+
+These are defense-in-depth checks inside one process, not a substitute for OS isolation.
+
+## Known limitations and review targets
 
 - The compatibility `run` interpreter uses Python `exec` on compiler-generated code. The limited built-ins are not a sandbox against hostile source or runtime vulnerabilities.
 - The independent 0.1 core is a preview with a deliberately small grammar and runtime type checks, not static type checking. It runs inside the host Python process. In addition to source, line, token, nesting, instruction, numeric, text, output, and per-list limits, it validates caller-supplied instruction budgets, caps declared variables and aggregate runtime values, and checks combined text retained in variables. Source files are opened through a file descriptor, checked with `fstat`, read with a strict byte cap, decoded as UTF-8, and opened with `O_NOFOLLOW` where the platform supports it. These controls reduce some accidental resource exhaustion and common link attacks but do not provide an OS sandbox, hard memory quota, process isolation, protection from interpreter vulnerabilities, or protection against every filesystem race.
