@@ -115,7 +115,9 @@ def _open_user_file(name, mode):
     """
     if mode not in ("r", "w"):
         raise ValueError("unsupported file mode")
-    flags = os.O_RDONLY if mode == "r" else (os.O_WRONLY | os.O_CREAT | os.O_TRUNC)
+    # Do not use O_TRUNC here: opening a hard link with O_TRUNC would
+    # modify its target before the link-count check below can reject it.
+    flags = os.O_RDONLY if mode == "r" else (os.O_WRONLY | os.O_CREAT)
     flags |= getattr(os, "O_CLOEXEC", 0)
     nofollow = getattr(os, "O_NOFOLLOW", 0)
     if not nofollow and os.path.islink(name):
@@ -133,6 +135,8 @@ def _open_user_file(name, mode):
             raise PlainlyRuntimeError("Plainly can only use regular files")
         if info.st_nlink != 1:
             raise PlainlyRuntimeError("hard-linked files are not allowed for Plainly file access")
+        if mode == "w":
+            os.ftruncate(fd, 0)
         return os.fdopen(fd, mode, encoding="utf-8")
     except BaseException:
         os.close(fd)
