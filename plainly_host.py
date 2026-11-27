@@ -4,6 +4,7 @@
 This module manages one child process per app. It deliberately does not claim
 to provide container, filesystem, network, CPU, or memory isolation.
 """
+import math
 import os
 import re
 import signal
@@ -135,6 +136,8 @@ class PlainlyHost:
             }
 
     def stop(self, app_id, timeout=10):
+        if isinstance(timeout, bool) or not isinstance(timeout, (int, float)) or not math.isfinite(timeout) or not 0 <= timeout <= 300:
+            raise HostError("timeout must be a finite number from 0 to 300 seconds")
         with self._lock:
             job = self._jobs.get(app_id)
             if not job:
