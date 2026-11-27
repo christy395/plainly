@@ -1,0 +1,6 @@
+# Generated Plainly independent-core bytecode
+*.core.pbc
+
+# Python-generated files
+__pycache__/
+*.py[cod]
