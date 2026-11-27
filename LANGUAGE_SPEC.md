@@ -4,8 +4,8 @@ This document specifies the independent Plainly core interpreter introduced in 1
 
 ## Design goals
 
-- Plainly source is interpreted by Plainly's own tokenizer, parser, abstract syntax tree, and runtime.
-- This core does not translate programs into Python, JavaScript, or C.
+- Plainly source is processed by Plainly's own tokenizer, parser, abstract syntax tree, compiler, and virtual machine.
+- The core compiler translates its own AST into versioned Plainly bytecode; it does not translate programs into Python, JavaScript, or C.
 - Syntax should remain readable and English-oriented.
 - Invalid operations should produce source-line diagnostics.
 - Program execution must have explicit source, parser, numeric, collection, text, and instruction limits.
@@ -132,10 +132,12 @@ The independent core has separate commands while compatibility work continues:
 ~~~sh
 plainly core-check hello.plain
 plainly core-run hello.plain
+plainly core-compile hello.plain
+plainly core-execute hello.core.pbc
 ~~~
 
-The existing run, check, build, c, native, compile, and execute commands are legacy execution paths for the larger 1.4 language. In particular, the legacy run path still uses the existing Python-based implementation. It has not yet been replaced because the independent core does not yet implement the complete legacy language. Do not mistake the new core preview for full feature parity.
+The `core-compile` command creates a checksummed, versioned `.core.pbc` bytecode file from the independent AST. `core-execute` validates and runs that bytecode in the independent stack VM. The existing run, check, build, c, native, compile, and execute commands are legacy execution paths for the larger 1.4 language. In particular, the legacy run path still uses the existing Python-based implementation. It has not yet been replaced because the independent core does not yet implement the complete legacy language. Do not mistake the new core preview for full feature parity.
 
 ## Security boundary
 
-The core runtime has no file, network, process, browser, native-extension, or dynamic-import statements. It does not execute source strings or generate code for another language. It still runs inside the host Python process, and parser/runtime defects are possible. It is not an OS sandbox and must not be used to host untrusted multi-tenant code. Use OS-level isolation, least privilege, quotas, and independent security review for hosted workloads.
+The core runtime has no file, network, process, browser, native-extension, or dynamic-import statements. It does not execute source strings or generate code for another language. The current compiler and VM implementation still runs inside the host Python process, and parser/runtime defects are possible. It is not an OS sandbox and must not be used to host untrusted multi-tenant code. Use OS-level isolation, least privilege, quotas, and independent security review for hosted workloads.
