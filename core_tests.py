@@ -86,6 +86,26 @@ class PlainlyCoreTests(unittest.TestCase):
     def test_english_greater_than(self):
         self.assertEqual(core.run_source("say 9 is greater than 4\n"), "yes\n")
 
+    def test_unicode_text_is_preserved(self):
+        self.assertEqual(core.run_source('say "नमस्ते കേരളം"\n'), "नमस्ते കേരളം\n")
+
+    def test_not_binds_to_comparison_before_and(self):
+        self.assertEqual(core.run_source("say not 2 is less than 1\n"), "yes\n")
+
+    def test_token_limit_counts_tokens_not_lines(self):
+        with self.assertRaisesRegex(core.PlainlyCoreError, "too many tokens"):
+            core.check_source("say 1\n" * (core.MAX_TOKENS // 2 + 1))
+
+    def test_huge_integer_is_rejected_cleanly(self):
+        with self.assertRaisesRegex(core.PlainlyCoreError, "number literal is too long"):
+            core.run_source("say " + ("9" * 129) + "\n")
+
+    def test_block_nesting_limit(self):
+        depth = core.MAX_AST_DEPTH + 2
+        source = "if yes then\n" * depth + "say 1\n" + "end if\n" * depth
+        with self.assertRaisesRegex(core.PlainlyCoreError, "block nesting is too deep"):
+            core.check_source(source)
+
     def test_unknown_function_is_reported(self):
         with self.assertRaisesRegex(core.PlainlyCoreError, "unknown function"):
             core.run_source("say do_something(1)\n")
