@@ -39,6 +39,9 @@ jobs:
       - name: Run independent core bytecode tests
         run: python core_bytecode_tests.py
 
+      - name: Run deterministic core fuzz tests
+        run: python core_fuzz_tests.py
+
       - name: Run bytecode VM tests
         run: python bytecode_tests.py
 
