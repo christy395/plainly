@@ -158,6 +158,16 @@ class HostingTests(unittest.TestCase):
         finally:
             manager.close()
 
+    def test_provider_adapter_rejects_invalid_stop_timeouts(self):
+        manager = plainly_host.PlainlyHost()
+        try:
+            for value in (True, -1, float("inf"), float("nan"), "5", 301):
+                with self.subTest(timeout=value):
+                    with self.assertRaises(plainly_host.HostError):
+                        manager.stop("missing", timeout=value)
+        finally:
+            manager.close()
+
     def test_provider_adapter_refuses_programs_outside_workspace(self):
         outside = tempfile.NamedTemporaryFile(delete=False, suffix=".plain")
         outside.write(b"say 1\n")
