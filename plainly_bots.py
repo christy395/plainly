@@ -19,7 +19,7 @@ class BotRuntimeError(RuntimeError):
 
 def _json_request(url, payload=None, timeout=35, headers=None):
     data = None if payload is None else json.dumps(payload).encode("utf-8")
-    request_headers = {"Accept": "application/json", "User-Agent": "Plainly/1.2.0"}
+    request_headers = {"Accept": "application/json", "User-Agent": "Plainly/1.3.0"}
     if data is not None:
         request_headers["Content-Type"] = "application/json"
     if headers:
@@ -112,7 +112,7 @@ def _discord_request(api, token, channel_id, text):
         "%s/channels/%s/messages" % (api.rstrip("/"), channel_id),
         {"content": str(text)},
         headers={"Authorization": "Bot " + token,
-                 "User-Agent": "DiscordBot (https://github.com/christy395/plainly, 1.2.0)"},
+                 "User-Agent": "DiscordBot (https://github.com/christy395/plainly, 1.3.0)"},
     )
 
 
