@@ -91,6 +91,19 @@ class PlainlyAuditRegressionTests(unittest.TestCase):
         with self.assertRaises(plainly.PlainlyRuntimeError):
             plainly._read("linked.txt")
 
+    def test_hard_link_write_is_rejected_without_changing_target(self):
+        with open("outside.txt", "w", encoding="utf-8") as handle:
+            handle.write("original")
+        try:
+            os.link("outside.txt", "linked.txt")
+        except (OSError, NotImplementedError):
+            self.skipTest("hard links are unavailable on this platform")
+        plainly.PERMS.add(("write", "linked.txt"))
+        with self.assertRaises(plainly.PlainlyRuntimeError):
+            plainly._write("linked.txt", "changed")
+        with open("outside.txt", encoding="utf-8") as handle:
+            self.assertEqual(handle.read(), "original")
+
     def test_memory_file_symbolic_link_is_rejected(self):
         with open("outside.json", "w", encoding="utf-8") as handle:
             handle.write("{}")
