@@ -1,0 +1,61 @@
+name: Cross-platform regression checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  python-runtime:
+    name: Python ${{ matrix.python-version }} / ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ["3.9", "3.11", "3.13"]
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Compile Python modules
+        run: python -m py_compile plainly.py plainly_bytecode.py plainly_bots.py plainly_host.py plainly_project.py plainly_core.py
+
+      - name: Run security regression tests
+        run: python audit_tests.py
+
+      - name: Run independent core tests
+        run: python core_tests.py
+
+      - name: Run bytecode VM tests
+        run: python bytecode_tests.py
+
+      - name: Check independent core sample
+        run: python plainly.py core-check core_hello.plain
+
+      - name: Execute independent core sample
+        run: python plainly.py core-run core_hello.plain
+
+  browser-editor:
+    name: Browser editor regression checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Test browser editor
+        run: node web_test.js
