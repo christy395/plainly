@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Correct Discord Gateway heartbeat timing and require heartbeat acknowledgements before the next scheduled heartbeat.
+- Reconnect when Discord requests a new Gateway session and disable automatic mention parsing in bot replies.
+- Extend mocked integration coverage for the safe Discord message payload.
+
+
 ## 1.3.0
 
 - Add basic Discord Gateway and Telegram Bot API text-message integrations with per-app token environment variables.
