@@ -23,6 +23,7 @@
 
 ## Unreleased
 
+- Improve cross-platform local hosting readiness checks with shorter retries, a longer startup allowance, unbuffered child output, and actionable failure diagnostics.
 - Make local HTTP integration tests bypass inherited proxy settings so loopback checks work consistently on macOS, Windows, and Linux.
 - Move macOS CI jobs from the retired `macos-14` runner to the supported `macos-15` runner.
 - Extend automated compatibility checks across Windows, macOS, and Linux for supported Python versions and the browser test suite.
