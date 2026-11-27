@@ -92,7 +92,7 @@ class BotIntegrationTests(unittest.TestCase):
             self.assertEqual([item["text"] for item in mock.sent[:2]],
                              ["Hello Ann", "You said what is this"])
             self.assertTrue(all(str(item["chat_id"]) == "111" for item in mock.sent[:2]))
-            self.assertIn(13, mock.offsets)
+            self.assertTrue(wait_until(lambda: 13 in mock.offsets), "Telegram bot did not advance its update offset")
         finally:
             process.terminate()
             process.wait(timeout=4)
