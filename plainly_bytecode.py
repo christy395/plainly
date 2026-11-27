@@ -228,7 +228,7 @@ class _Compiler:
             self.compile_expr(node.left); self.compile_expr(node.right); self.emit(opname)
         elif isinstance(node, ast.UnaryOp) and isinstance(node.op, ast.Not):
             self.compile_expr(node.operand); self.emit("NOT")
-        elif isinstance(node, ast.BoolOp):
+        elif isinstance(node, ast.BoolOp) and isinstance(node.op, (ast.And, ast.Or)):
             exits = []
             for value in node.values[:-1]:
                 self.compile_expr(value)
@@ -248,8 +248,12 @@ class _Compiler:
             for arg in node.args: self.compile_expr(arg)
             if name.startswith("f_"):
                 self.emit("CALL", name, len(node.args))
-            else:
+            elif name in {"_say", "_cat", "_count", "_length", "_sqrt", "_abs",
+                          "_rounded", "_largest", "_smallest", "_at", "_ask",
+                          "_parsed", "_orelse", "range"}:
                 self.emit("BUILTIN", name, len(node.args))
+            else:
+                self.fail(node, "the feature used here is not supported by bytecode: " + name)
         else:
             self.fail(node, "this expression is not supported by the current bytecode version")
 
@@ -493,7 +497,12 @@ def run_program(program, input_fn=input, step_limit=MAX_STEPS):
                 raise BytecodeError("unsupported bytecode instruction: " + name)
         return None
 
-    execute(program["main"], {}, 0)
+    try:
+        execute(program["main"], {}, 0)
+    except BytecodeError:
+        raise
+    except (IndexError, KeyError, TypeError, ValueError, OverflowError, ZeroDivisionError) as exc:
+        raise BytecodeError("invalid bytecode operation: %s" % exc)
 
 def run_bytes(blob, input_fn=input, step_limit=MAX_STEPS):
     run_program(loads(blob), input_fn=input_fn, step_limit=step_limit)
