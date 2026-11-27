@@ -474,6 +474,8 @@ The native backend currently supports numbers, text, yes/no values, number lists
 | `plainly build FILE` | Print the generated Python |
 | `plainly c FILE` | Print the generated C for the native subset |
 | `plainly native FILE` | Build a native executable |
+| `plainly compile FILE` | Compile supported source to a binary `.pbc` file |
+| `plainly execute FILE` | Run a binary `.pbc` file in the Plainly VM |
 | `plainly version` | Print the language version |
 
 The same commands can be run with `python3 plainly.py` instead of the installed `plainly` command.
