@@ -14,6 +14,8 @@ Usage:
     python3 plainly.py fix    program.plain   fix common mistakes into program.fixed.plain
     python3 plainly.py core-check file.plain   check the independent Plainly core
     python3 plainly.py core-run file.plain     run with the independent Plainly core
+    python3 plainly.py core-compile file.plain compile independent core bytecode
+    python3 plainly.py core-execute file.core.pbc execute independent core bytecode
     python3 plainly.py version                show the version
 
 Plainly checks types and permissions before anything runs. There is no null:
@@ -1854,6 +1856,18 @@ def fix_file(path, src):
 
 
 def main(argv):
+    if len(argv) == 3 and argv[1] in ("core-compile", "core-execute"):
+        try:
+            from plainly_core_bytecode import CoreBytecodeError, compile_file as core_compile_file, run_file as core_execute_file
+            if argv[1] == "core-compile":
+                output = core_compile_file(argv[2])
+                print("Compiled %s to %s (independent Plainly core bytecode v1)." % (argv[2], output))
+            else:
+                sys.stdout.write(core_execute_file(argv[2]))
+            return 0
+        except (CoreBytecodeError, PlainlyRuntimeError, OSError) as exc:
+            print("Plainly core bytecode error: %s" % exc, file=sys.stderr)
+            return 1
     if len(argv) >= 2 and argv[1] in ("core-check", "core-run"):
         if len(argv) != 3:
             print("Usage: plainly %s FILE.plain" % argv[1], file=sys.stderr)
