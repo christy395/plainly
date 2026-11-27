@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.2.0 (in development)
+
+- Add a versioned binary `.pbc` bytecode format and a dedicated Plainly virtual machine.
+- Add `plainly compile` and `plainly execute` commands.
+- Support calculations, text, booleans, conditions, loops, lists, functions, and selected built-in helpers in bytecode version 1.
+- Add bytecode format validation, checksums, execution limits, and automated regression tests.
+
+
 ## 1.1.1
 
 - Reject symbolic links, hard-linked files, and non-regular files in permitted runtime file access.
