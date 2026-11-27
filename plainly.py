@@ -4,6 +4,8 @@
 Usage:
     python3 plainly.py run    program.plain   check, then run (full language)
     python3 plainly.py native program.plain   check, then compile to a fast native program
+    python3 plainly.py compile program.plain  compile to a binary .pbc bytecode file
+    python3 plainly.py execute program.pbc     execute a binary .pbc bytecode file
     python3 plainly.py check  program.plain   check only
     python3 plainly.py build  program.plain   show the generated Python
     python3 plainly.py c      program.plain   show the generated C
@@ -1633,10 +1635,26 @@ def main(argv):
         return 0
     if len(argv) == 2:
         argv = [argv[0], "run", argv[1]]
-    if len(argv) != 3 or argv[1] not in ("run", "check", "build", "c", "native", "fix"):
+    if len(argv) != 3 or argv[1] not in ("run", "check", "build", "c", "native", "fix", "compile", "execute"):
         print(__doc__)
         return 2
     cmd, path = argv[1], argv[2]
+    if cmd in ("compile", "execute"):
+        from plainly_bytecode import BytecodeError, compile_file, run_file
+        try:
+            if cmd == "compile":
+                output = compile_file(path)
+                print("Compiled %s to %s (Plainly bytecode v1)." % (path, output))
+            else:
+                run_file(path)
+        except PlainlyError as e:
+            where = "line %d: " % e.line if e.line else ""
+            print("Plainly found a problem.\\n%s%s" % (where, e.msg), file=sys.stderr)
+            return 1
+        except (BytecodeError, OSError) as e:
+            print("Plainly bytecode error: %s" % e, file=sys.stderr)
+            return 1
+        return 0
     with open(path, encoding="utf-8") as f:
         src = f.read()
     try:
