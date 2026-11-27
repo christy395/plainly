@@ -729,7 +729,6 @@ This release does not include Rust or Go compiler backends. The existing native 
 - [x] Add an independent AST-to-bytecode compiler and bounded stack virtual machine for the independent core, with checksummed `.core.pbc` files and no Python AST or generated-Python execution.
 - [x] Expose `core-compile` and `core-execute` commands for independent core bytecode.
 - [x] Add differential tests comparing independent interpreter and VM behavior, plus malformed/tampered bytecode and execution-budget tests.
-- [ ] Expand the independent compiler with functions, records, modules, packages, error handling, and a versioned standard library.
 - [ ] Add static type checking, functions, records, modules, packages, error handling, and a versioned standard library to the independent core.
 - [ ] Create a browser compilation target using WebAssembly, with Plainly-owned browser APIs and no user-authored JavaScript requirement.
 - [ ] Build Plainly's frontend system for page structure, styling, browser events, accessibility, and component composition.
