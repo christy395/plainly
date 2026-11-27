@@ -111,7 +111,7 @@ class PlainlyAuditRegressionTests(unittest.TestCase):
     def test_native_backend_emits_a_compilable_program_shape(self):
         source, _ = plainly.compile_source("say 42", native=True)
         self.assertIn("int main(void)", source)
-        self.assertIn("p_say_num(42)", source)
+        self.assertIn("p_say_num(42.0)", source)
 
 
 if __name__ == "__main__":
