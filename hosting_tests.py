@@ -25,8 +25,8 @@ def free_port():
 def request(port, path, host, timeout=3):
     """Make a direct HTTP request to loopback without consulting proxy settings."""
     payload = (
-        "GET %s HTTP/1.1\\r\\nHost: %s:%d\\r\\n"
-        "Connection: close\\r\\n\\r\\n" % (path, host, port)
+        "GET %s HTTP/1.1\r\nHost: %s:%d\r\n"
+        "Connection: close\r\n\r\n" % (path, host, port)
     ).encode("ascii")
     with socket.create_connection(("127.0.0.1", port), timeout=timeout) as connection:
         connection.settimeout(timeout)
@@ -38,10 +38,10 @@ def request(port, path, host, timeout=3):
                 break
             chunks.append(chunk)
     response = b"".join(chunks)
-    header, separator, body = response.partition(b"\\r\\n\\r\\n")
+    header, separator, body = response.partition(b"\r\n\r\n")
     if not separator:
         raise RuntimeError("local HTTP server returned an incomplete response")
-    status_line = header.split(b"\\r\\n", 1)[0].split()
+    status_line = header.split(b"\r\n", 1)[0].split()
     if len(status_line) < 2:
         raise RuntimeError("local HTTP server returned an invalid status line")
     return int(status_line[1]), body.decode("utf-8")
