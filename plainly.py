@@ -38,6 +38,7 @@ import errno
 import stat
 from urllib.parse import urlparse, parse_qs
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from socketserver import TCPServer
 
 
 def _m(s):
@@ -437,6 +438,15 @@ def _serve(port):
         raise PlainlyRuntimeError(
             "public website hosting requires at least one allowed domain; pass --allow-host YOUR_DOMAIN")
 
+    class PlainlyHTTPServer(ThreadingHTTPServer):
+        def server_bind(self):
+            # HTTPServer.server_bind() calls socket.getfqdn(), which can block
+            # on reverse DNS. The TCP layer already knows the bound address;
+            # use it directly and keep startup independent of DNS availability.
+            TCPServer.server_bind(self)
+            self.server_name = str(self.server_address[0])
+            self.server_port = self.server_address[1]
+
     class Handler(BaseHTTPRequestHandler):
         server_version = "Plainly"
         sys_version = ""
@@ -482,7 +492,7 @@ def _serve(port):
 
     _server_debug("creating HTTP listener")
     try:
-        srv = ThreadingHTTPServer((host, port), Handler)
+        srv = PlainlyHTTPServer((host, port), Handler)
     except OSError:
         raise PlainlyRuntimeError("could not start on %s:%d; check the host and port" % (host, port))
     _server_debug("HTTP listener created and bound")
