@@ -12,6 +12,8 @@ Usage:
     python3 plainly.py build  program.plain   show the generated Python
     python3 plainly.py c      program.plain   show the generated C
     python3 plainly.py fix    program.plain   fix common mistakes into program.fixed.plain
+    python3 plainly.py core-check file.plain   check the independent Plainly core
+    python3 plainly.py core-run file.plain     run with the independent Plainly core
     python3 plainly.py version                show the version
 
 Plainly checks types and permissions before anything runs. There is no null:
@@ -531,7 +533,7 @@ static const char *p_ask(void) { char *b = malloc(4096); if (!fgets(b, 4096, std
 
 # --------------------------------------------------------------- compiler
 NUM = re.compile(r"^\d+(\.\d+)?$")
-VERSION = "1.4.0"
+VERSION = "1.5.0"
 TEXT_SPAN = re.compile(r"\bthe\s+words\b.*?(?:\bend\s+words\b|$)", re.I)
 FORBIDDEN = set('_:"()[]{};')
 RESERVED = set("""be to of is and or not then do end plus minus times divided by modulo
@@ -1814,6 +1816,21 @@ def fix_file(path, src):
 
 
 def main(argv):
+    if len(argv) >= 2 and argv[1] in ("core-check", "core-run"):
+        if len(argv) != 3:
+            print("Usage: plainly %s FILE.plain" % argv[1], file=sys.stderr)
+            return 2
+        try:
+            from plainly_core import PlainlyCoreError, check_file, run_file
+            if argv[1] == "core-check":
+                check_file(argv[2])
+                print("Plainly Core: source is syntactically valid.")
+            else:
+                sys.stdout.write(run_file(argv[2]))
+            return 0
+        except (PlainlyCoreError, OSError) as exc:
+            print("Plainly Core error: %s" % exc, file=sys.stderr)
+            return 1
     if len(argv) >= 2 and argv[1] == "init":
         if len(argv) not in (4, 5):
             print("Usage: plainly init app|game NAME [PARENT_FOLDER]", file=sys.stderr)
