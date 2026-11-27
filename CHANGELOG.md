@@ -23,6 +23,7 @@
 
 ## Unreleased
 
+- Add opt-in macOS stack dumps when the local server integration test cannot bring up its listener.
 - Add opt-in server startup diagnostics to help troubleshoot platform-specific listener startup issues.
 - Correct HTTP CRLF framing in the cross-platform hosting integration test and make server access logging safe for malformed requests.
 - Use direct TCP loopback requests in hosting integration tests and capture macOS child-process/listener diagnostics on failure.
