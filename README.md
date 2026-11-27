@@ -440,7 +440,7 @@ The first bytecode version supports:
 - User-defined functions, function inputs, and returned values.
 - Text joining, user input, and supported numeric/list helpers.
 
-The normal Plainly parser and type checker validate source programs before bytecode is created. The bytecode compiler then translates the checked program into VM instructions; it does not execute the generated Python.
+The normal Plainly parser and type checker validate source programs before bytecode is created. The bytecode compiler then translates the checked program into VM instructions; it does not execute the generated Python. The container header, binary layout, and opcode list are documented in [BYTECODE.md](BYTECODE.md).
 
 ### Current limitations
 
