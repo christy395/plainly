@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.2.0 (in development)
+## 1.2.0
 
 - Add a versioned binary `.pbc` bytecode format and a dedicated Plainly virtual machine.
 - Add `plainly compile` and `plainly execute` commands.
