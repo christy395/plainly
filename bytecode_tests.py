@@ -120,6 +120,15 @@ class BytecodeTests(unittest.TestCase):
         with self.assertRaisesRegex(bc.BytecodeError, "instruction limit"):
             bc.run_bytes(blob, step_limit=25)
 
+    def test_repository_hello_bytecode_sample(self):
+        path = os.path.join(os.path.dirname(__file__), "hello.pbc")
+        with open(path, "rb") as handle:
+            blob = handle.read()
+        output = io.StringIO()
+        with contextlib.redirect_stdout(output):
+            bc.run_bytes(blob)
+        self.assertEqual(output.getvalue(), "Hello, world.\\n")
+
     def test_file_and_cli_round_trip(self):
         with tempfile.TemporaryDirectory() as directory:
             source_path = os.path.join(directory, "hello.plain")
