@@ -146,8 +146,11 @@ class BotIntegrationTests(unittest.TestCase):
                    PLAINLY_DISCORD_GATEWAY="ws://127.0.0.1:%d/" % gateway_port)
         process = self.start_program(path, env)
         try:
-            self.assertTrue(wait_until(lambda: len(mock.posts) >= 1 and mock.heartbeats >= 1),
-                            "Discord bot did not connect and respond")
+            connected = wait_until(lambda: len(mock.posts) >= 1 and mock.heartbeats >= 1)
+            if not connected:
+                process.terminate()
+                stdout, stderr = process.communicate(timeout=4)
+                self.fail("Discord bot did not connect and respond. stdout=%r stderr=%r" % (stdout, stderr))
             self.assertEqual(len(mock.posts), 1)
             self.assertEqual(mock.posts[0][0], "/channels/999/messages")
             self.assertEqual(mock.posts[0][1], {"content": "Hello Bob"})
