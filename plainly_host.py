@@ -7,6 +7,7 @@ to provide container, filesystem, network, CPU, or memory isolation.
 import os
 import re
 import signal
+import stat
 import subprocess
 import sys
 import threading
@@ -34,16 +35,22 @@ class PlainlyHost:
 
     @staticmethod
     def _validate_workspace(program, workdir):
-        workspace = os.path.realpath(os.path.abspath(workdir))
-        if not os.path.isdir(workspace) or os.path.islink(workdir):
+        workspace_input = os.path.abspath(workdir)
+        if os.path.islink(workspace_input):
+            raise HostError("the app workspace must not be a symbolic link")
+        workspace = os.path.realpath(workspace_input)
+        if not os.path.isdir(workspace):
             raise HostError("the app workspace must be an existing private directory")
-        source = os.path.realpath(os.path.abspath(program if os.path.isabs(program)
-                                                   else os.path.join(workspace, program)))
+        source_input = os.path.abspath(program if os.path.isabs(program)
+                                       else os.path.join(workspace, program))
+        if os.path.islink(source_input):
+            raise HostError("the Plainly program must not be a symbolic link")
+        source = os.path.realpath(source_input)
         try:
             inside = os.path.commonpath([workspace, source]) == workspace
         except ValueError:
             inside = False
-        if not inside or not os.path.isfile(source) or os.path.islink(program):
+        if not inside or not os.path.isfile(source):
             raise HostError("the Plainly program must be a regular .plain file inside its workspace")
         if not source.lower().endswith(".plain"):
             raise HostError("hosting currently accepts Plainly .plain source files")
@@ -78,9 +85,10 @@ class PlainlyHost:
             flags |= getattr(os, "O_NOFOLLOW", 0)
             try:
                 fd = os.open(log_path, flags, 0o600)
-                if not os.path.isfile(log_path):
+                info = os.fstat(fd)
+                if not stat.S_ISREG(info.st_mode) or info.st_nlink != 1:
                     os.close(fd)
-                    raise HostError("the app log must be a regular file")
+                    raise HostError("the app log must be a regular file without hard links")
                 log_handle = os.fdopen(fd, "ab", buffering=0)
             except OSError:
                 raise HostError("could not open the app log safely") from None
@@ -106,6 +114,7 @@ class PlainlyHost:
                 "started": time.time(),
                 "program": os.path.basename(source),
                 "workdir": workspace,
+                "log_path": log_path,
             }
             return self.status(app_id)
 
@@ -151,6 +160,27 @@ class PlainlyHost:
             except Exception:
                 pass
             return self.status(app_id)
+
+    def logs(self, app_id, max_bytes=65536):
+        """Return the most recent UTF-8 log text for one app."""
+        if not isinstance(max_bytes, int) or not 1 <= max_bytes <= 262144:
+            raise HostError("max_bytes must be from 1 to 262144")
+        with self._lock:
+            job = self._jobs.get(app_id)
+            if not job:
+                raise HostError("the app is not known to this host adapter")
+            flags = os.O_RDONLY | getattr(os, "O_CLOEXEC", 0) | getattr(os, "O_NOFOLLOW", 0)
+            try:
+                fd = os.open(job["log_path"], flags)
+                info = os.fstat(fd)
+                if not stat.S_ISREG(info.st_mode) or info.st_nlink != 1:
+                    os.close(fd)
+                    raise HostError("the app log is not a safe regular file")
+                with os.fdopen(fd, "rb") as handle:
+                    handle.seek(max(0, info.st_size - max_bytes))
+                    return handle.read(max_bytes).decode("utf-8", "replace")
+            except OSError:
+                raise HostError("could not read the app log safely") from None
 
     def close(self):
         """Stop all processes owned by this adapter."""
