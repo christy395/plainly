@@ -90,7 +90,7 @@ plainly core-compile core_hello.plain
 plainly core-execute core_hello.core.pbc
 ~~~
 
-Read the exact grammar and current limits in [LANGUAGE_SPEC.md](LANGUAGE_SPEC.md).
+Read the exact grammar and current limits in [LANGUAGE_SPEC.md](LANGUAGE_SPEC.md). Review the independent core's trust boundaries in [CORE_THREAT_MODEL.md](CORE_THREAT_MODEL.md).
 
 **Important:** this is the beginning of the rebuild, not full feature parity. The older `run`, `check`, `build`, `native`, `compile`, and `execute` commands still use the 1.4 implementation. The independent core now has its own AST-to-bytecode compiler and bounded virtual machine through `core-compile` and `core-execute`. It does not yet have user-defined functions, records, modules, static type declarations, a browser target, or a production web framework. Those remain planned stages, not shipped features.
 
@@ -725,7 +725,9 @@ This release does not include Rust or Go compiler backends. The existing native 
 - [x] Use bounded descriptor-based source reads, regular-file checks, strict UTF-8 decoding, and no-follow opens where supported.
 - [x] Validate file type and hard-link count before truncating a permitted file, preventing rejected hard-link writes from modifying their targets.
 - [x] Add a regression test proving a rejected hard-link write leaves the linked target unchanged.
-- [ ] Add a separately maintained threat model, fuzzing corpus, property-based parser tests, and independent security review.
+- [x] Document the independent core's trust boundaries, current mitigations, and explicit security limitations in [CORE_THREAT_MODEL.md](CORE_THREAT_MODEL.md).
+- [x] Add deterministic seeded source-mutation and malformed-bytecode fuzz regression tests to the cross-platform CI matrix.
+- [ ] Add long-running coverage-guided fuzzing, property-based parser tests, and an independent security review.
 
 ### Planned work
 
