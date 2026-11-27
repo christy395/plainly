@@ -54,48 +54,125 @@ Plainly 1.1.1 currently includes:
 
 The Python runtime and browser editor do not support exactly the same features. See [Known limitations](#known-limitations).
 
-## Quick start
+## Installation
 
-### Requirements
+Plainly's command-line interpreter is written in Python. **Python 3.8 or newer is required.** The browser editor is a separate option and does not require Python.
 
-- Python 3.8 or newer for the command-line interpreter.
-- Node.js for the browser regression test.
-- GCC, Clang, or another compatible C compiler only when using the native compilation command.
+### 1. Check Python
 
-### Get the source
+Open a terminal (Command Prompt or PowerShell on Windows) and run:
 
-Clone the repository and enter its folder:
+```sh
+python --version
+```
+
+On macOS or Linux, you may need:
+
+```sh
+python3 --version
+```
+
+If the command is not found, install Python 3.8 or newer from [python.org](https://www.python.org/downloads/) and enable the option to add Python to PATH on Windows.
+
+### 2. Download Plainly
+
+The recommended method is to clone the repository:
 
 ```sh
 git clone https://github.com/christy395/plainly.git
 cd plainly
 ```
 
-Run Plainly directly with Python:
+If Git is not installed, open the repository on GitHub, choose **Code → Download ZIP**, extract the ZIP file, and open a terminal in the extracted `plainly` folder.
+
+### 3. Install Plainly
+
+You can run it directly from the downloaded folder without installing a package:
+
+```sh
+python plainly.py version
+python plainly.py run hello.plain
+```
+
+On macOS or Linux, use `python3` if that is the Python command on your system:
 
 ```sh
 python3 plainly.py version
 python3 plainly.py run hello.plain
 ```
 
-On Windows, use `py` or `python` instead of `python3`.
-
-### Install the command
-
-From the repository folder:
+To install the command-line package from the repository folder, run:
 
 ```sh
-python3 -m pip install .
+python -m pip install .
 ```
 
-Then use the installed command:
+On macOS or Linux, use `python3 -m pip install .` if needed. After installation, check it:
 
 ```sh
 plainly version
 plainly run hello.plain
 ```
 
-For development, install an editable copy with `python3 -m pip install -e .`.
+If the `plainly` command is not found, the Python scripts directory may not be on PATH. You can always use `python plainly.py` from the repository folder.
+
+### 4. Optional: create a virtual environment
+
+A virtual environment keeps the installation separate from other Python projects.
+
+Windows PowerShell:
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install .
+```
+
+Windows Command Prompt:
+
+```bat
+python -m venv .venv
+.venv\Scripts\activate.bat
+python -m pip install .
+```
+
+macOS or Linux:
+
+```sh
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install .
+```
+
+To leave the virtual environment, run `deactivate`.
+
+### 5. Optional tools
+
+- **C compiler:** GCC or Clang is needed only for the existing `native` command. The command compiles the supported Plainly subset through generated C code. It is not a Plainly binary-bytecode compiler.
+- **Node.js:** needed only to run the browser test file `web_test.js`.
+- **Browser:** needed only to open `plainly-web.html`.
+
+### 6. Run your first program
+
+```sh
+plainly version
+plainly check hello.plain
+plainly run hello.plain
+```
+
+If you have not installed the command, use `python plainly.py` (Windows) or `python3 plainly.py` (macOS/Linux) instead.
+
+### Installation troubleshooting
+
+| Problem | What to try |
+|---|---|
+| `python` is not recognized | Install Python and enable PATH, or try `py` on Windows / `python3` on macOS and Linux. |
+| `No module named pip` | Repair the Python installation so it includes pip, then retry. |
+| Permission denied during installation | Use a virtual environment as shown above; avoid system-wide administrator installs. |
+| `plainly` is not recognized | Run from the repository with `python plainly.py`, or add the Python scripts directory to PATH. |
+| File not found | Run the command from the folder containing the `.plain` file, or provide its path. |
+| Native compilation fails | Install a compatible C compiler and ensure it is available on PATH. |
+
 
 ## Your first program
 
@@ -345,6 +422,9 @@ python3 plainly.py native speed.plain
 The native output is a platform-specific executable containing machine code. Plainly does not ask you to write raw binary instructions. It translates the Plainly program into C and lets GCC, Clang, or another compatible C compiler generate the executable.
 
 The native backend currently supports numbers, text, yes/no values, number lists, functions, and control-flow statements. It does not currently support file access, records, maybe values, or the web-server feature. The native output must be treated as executable code and run only with the same isolation precautions as any other program.
+
+
+**Binary bytecode status:** this repository version does not yet provide a `.pbc` bytecode format or a binary virtual machine. The existing `native` command produces a platform-specific executable through generated C. Do not use `.pbc` commands or expect binary bytecode support in this version.
 
 ## Commands
 
