@@ -28,6 +28,8 @@ import os
 import hashlib
 import threading
 import html as _html
+import errno
+import stat
 from urllib.parse import urlparse, parse_qs
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
@@ -96,13 +98,48 @@ def _check_file(kind, name):
             "permission denied: this program never asked to %s the file %s" % (kind, name))
 
 
+def _open_user_file(name, mode):
+    """Open a permitted local file without following a symbolic link.
+
+    Plainly only accepts a simple file name. O_NOFOLLOW closes the final-
+    component symlink race on systems that provide it. On other systems we
+    reject an already-present symlink before opening; deployments must still
+    use a private working directory owned by the Plainly process.
+    """
+    if mode not in ("r", "w"):
+        raise ValueError("unsupported file mode")
+    flags = os.O_RDONLY if mode == "r" else (os.O_WRONLY | os.O_CREAT | os.O_TRUNC)
+    flags |= getattr(os, "O_CLOEXEC", 0)
+    nofollow = getattr(os, "O_NOFOLLOW", 0)
+    if not nofollow and os.path.islink(name):
+        raise PlainlyRuntimeError("symbolic links are not allowed for Plainly files")
+    flags |= nofollow
+    try:
+        fd = os.open(name, flags, 0o600)
+    except OSError as e:
+        if getattr(e, "errno", None) == errno.ELOOP:
+            raise PlainlyRuntimeError("symbolic links are not allowed for Plainly files")
+        raise
+    try:
+        if not stat.S_ISREG(os.fstat(fd).st_mode):
+            raise PlainlyRuntimeError("Plainly can only use regular files")
+        return os.fdopen(fd, mode, encoding="utf-8")
+    except BaseException:
+        os.close(fd)
+        raise
+
+
 def _read(name):
     _check_file("read", name)
     try:
-        with open(name, encoding="utf-8") as f:
+        with _open_user_file(name, "r") as f:
             return f.read()
     except FileNotFoundError:
         raise PlainlyRuntimeError("the file %s does not exist" % name)
+    except PlainlyRuntimeError:
+        raise
+    except OSError:
+        raise PlainlyRuntimeError("Plainly could not read the file %s" % name)
 
 
 def _read_numbers(name):
@@ -121,8 +158,13 @@ def _read_lines(name):
 
 def _write(name, x):
     _check_file("write", name)
-    with open(name, "w", encoding="utf-8") as f:
-        f.write(_show(x) + "\n")
+    try:
+        with _open_user_file(name, "w") as f:
+            f.write(_show(x) + "\n")
+    except PlainlyRuntimeError:
+        raise
+    except OSError:
+        raise PlainlyRuntimeError("Plainly could not write the file %s" % name)
 
 
 def _count(n):
@@ -202,7 +244,7 @@ def _mem_load():
     if not path:
         raise PlainlyRuntimeError("this program never asked to remember things")
     try:
-        with open(path, encoding="utf-8") as f:
+        with _open_user_file(path, "r") as f:
             data = json.load(f)
     except FileNotFoundError:
         return {}
@@ -221,7 +263,7 @@ def _remember(name, value):
         if len(text) > 1000000:
             raise PlainlyRuntimeError("the memory file is full")
         tmp = _MEM["file"] + ".tmp"
-        with open(tmp, "w", encoding="utf-8") as f:
+        with _open_user_file(tmp, "w") as f:
             f.write(text)
         os.replace(tmp, _MEM["file"])
 
