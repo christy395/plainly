@@ -21,7 +21,7 @@ MAX_VARIABLES = core.MAX_VARIABLES
 
 OPS = {
     "CONST": 1, "LOAD": 2, "DECLARE": 3, "STORE": 4, "SAY": 5,
-    "POP": 6, "DUP": 17, "UNARY": 7, "BINARY": 8, "CALL": 9, "BUILD_LIST": 10,
+    "POP": 6, "DUP": 17, "BOOL_CHECK": 18, "UNARY": 7, "BINARY": 8, "CALL": 9, "BUILD_LIST": 10,
     "JUMP": 11, "JUMP_FALSE": 12, "JUMP_TRUE": 13,
     "REPEAT_START": 14, "REPEAT_NEXT": 15, "HALT": 16,
 }
@@ -88,12 +88,15 @@ class Compiler:
                 jump = self.emit("JUMP_FALSE", -1, expr.line)
                 self.emit("POP", expr.line)
                 self.expression(right)
+                self.emit("BOOL_CHECK", expr.line)
                 self.patch(jump, len(self.code))
             elif value == "or":
                 self.expression(left)
                 self.emit("DUP", expr.line)
                 jump = self.emit("JUMP_TRUE", -1, expr.line)
+                self.emit("POP", expr.line)
                 self.expression(right)
+                self.emit("BOOL_CHECK", expr.line)
                 self.patch(jump, len(self.code))
             else:
                 if value not in _ALLOWED_BINARY:
@@ -166,7 +169,7 @@ def _validate_program(program):
         op = item[0]
         expected = {
             "CONST": 3, "LOAD": 3, "DECLARE": 3, "STORE": 3, "SAY": 2,
-            "POP": 2, "DUP": 2, "UNARY": 3, "BINARY": 3, "CALL": 4,
+            "POP": 2, "DUP": 2, "BOOL_CHECK": 2, "UNARY": 3, "BINARY": 3, "CALL": 4,
             "BUILD_LIST": 3, "JUMP": 3, "JUMP_FALSE": 3, "JUMP_TRUE": 3,
             "REPEAT_START": 3, "REPEAT_NEXT": 3, "HALT": 1,
         }[op]
@@ -352,6 +355,8 @@ class VirtualMachine:
             self.tick(line)
             pc += 1
             if op == "HALT":
+                if self.stack or self.repeats:
+                    raise CoreBytecodeError("bytecode halted with an unbalanced runtime stack")
                 break
             if op == "CONST": self.push(item[1], line)
             elif op == "LOAD":
@@ -379,6 +384,11 @@ class VirtualMachine:
                 if not self.stack:
                     raise CoreBytecodeError("bytecode stack underflow")
                 self.push(self.stack[-1], line)
+            elif op == "BOOL_CHECK":
+                value = self.pop(line)
+                if not isinstance(value, bool):
+                    raise core.PlainlyCoreError("condition needs a yes/no value", line)
+                self.push(value, line)
             elif op == "UNARY":
                 value = self.pop(line)
                 if item[1] == "not":
