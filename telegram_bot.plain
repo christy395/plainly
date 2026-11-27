@@ -1,0 +1,13 @@
+note A Telegram bot. Get a token from BotFather in Telegram, then set the secret PLAINLY_SECRET_TELEGRAM_TOKEN.
+allow running a Telegram bot
+when a Telegram message arrives do
+let said be the message text
+if said contains the words hello end words then
+reply with the words Hello followed by the message author
+otherwise if said contains the words help end words then
+reply with the words I can say hello. Try it!
+otherwise
+reply with the words You said followed by said
+end if
+end when
+start the Telegram bot

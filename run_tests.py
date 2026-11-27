@@ -136,6 +136,89 @@ def main():
             proc.terminate()
             proc.wait()
 
+        print("Hosting mode")
+        p = program(d, "host.plain", "when someone visits the path hi do\nreply with the words Hello\nend when\n"
+                    "when someone visits the path spin do\nlet n be 0\nwhile true do\nadd 1 to n\nend while\n"
+                    "reply with the words never\nend when\nstart the server on port 8095\n")
+        code, out, err = plainly("run", p, "--host", "0.0.0.0")
+        check("public address needs allowed hosts", code == 1 and "allow-host" in err, err)
+        env = dict(os.environ, PORT="8092")
+        proc = subprocess.Popen([sys.executable, PL, "run", p, "--host", "127.0.0.1", "--allow-host", "example.test"],
+                                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, env=env)
+        time.sleep(1.5)
+
+        def fetch(path, host=None):
+            req = urllib.request.Request("http://127.0.0.1:8092" + path, headers={"Host": host} if host else {})
+            try:
+                r = urllib.request.urlopen(req, timeout=40)
+                return r.status, r.read().decode(), r.headers.get("Server", "")
+            except urllib.error.HTTPError as e:
+                return e.code, e.read().decode(), ""
+        try:
+            check("PORT setting is used", fetch("/hi")[:2] == (200, "Hello"))
+            check("allowed host accepted", fetch("/hi", "example.test")[:2] == (200, "Hello"))
+            check("other host refused", fetch("/hi", "evil.example")[0] == 403)
+            check("health check", fetch("/healthz")[:2] == (200, "ok"))
+            check("server does not reveal Python", "Python" not in fetch("/hi")[2])
+            st, body, _ = fetch("/spin")
+            check("endless page is stopped", st == 500 and "took too long" in body, body)
+            check("server still works afterwards", fetch("/hi")[:2] == (200, "Hello"))
+        finally:
+            proc.terminate()
+            proc.wait()
+
+        print("Bots (against local imitations of Telegram and Discord)")
+        sys.path.insert(0, os.path.join(ROOT, "tests"))
+        import mock_bots
+
+        def wait_for(cond, secs=10):
+            end = time.time() + secs
+            while time.time() < end and not cond():
+                time.sleep(0.1)
+            return cond()
+        p = program(d, "perm.plain", "when a Telegram message arrives do\nreply with the words hi\nend when\n")
+        check("bot handler needs permission", plainly("run", p)[0] == 1 and "asked permission" in plainly("run", p)[2])
+        p = program(d, "early.plain", "allow running a Discord bot\nstart the Discord bot\n")
+        check("bot cannot start without a handler", "before starting" in plainly("run", p)[2])
+        code, out, err = plainly("run", os.path.join(EX, "telegram_bot.plain"))
+        check("missing token explains what to do", code == 1 and "PLAINLY_SECRET_TELEGRAM_TOKEN" in err, err)
+        tg = mock_bots.TelegramMock(8101)
+        tg.updates = [{"update_id": 10, "message": {"text": "Hello there", "from": {"first_name": "Ann"}, "chat": {"id": 111}}},
+                      {"update_id": 11, "message": {"text": "what is this", "from": {"first_name": "Ann"}, "chat": {"id": 111}}},
+                      {"update_id": 12, "message": {"photo": []}}]
+        env = dict(os.environ, PLAINLY_SECRET_TELEGRAM_TOKEN="TESTTOKEN", PLAINLY_TELEGRAM_API="http://127.0.0.1:8101")
+        proc = subprocess.Popen([sys.executable, PL, "run", os.path.join(EX, "telegram_bot.plain")], env=env,
+                                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        try:
+            wait_for(lambda: len(tg.sent) >= 2)
+            time.sleep(1)
+            check("telegram: replies", [m["text"] for m in tg.sent] == ["Hello Ann", "You said what is this"], str(tg.sent))
+            check("telegram: sent to the right chat", all(str(m["chat_id"]) == "111" for m in tg.sent))
+            check("telegram: moves past handled updates", 13 in tg.offsets, str(tg.offsets))
+        finally:
+            proc.terminate()
+            proc.wait()
+        env["PLAINLY_SECRET_TELEGRAM_TOKEN"] = "WRONG"
+        r = subprocess.run([sys.executable, PL, "run", os.path.join(EX, "telegram_bot.plain")], env=env,
+                           capture_output=True, text=True, timeout=20)
+        check("telegram: wrong token is reported", "token is not valid" in r.stdout, r.stdout + r.stderr)
+        dc = mock_bots.DiscordMock(8102, 8103)
+        env = dict(os.environ, PLAINLY_SECRET_DISCORD_TOKEN="TESTTOKEN", PLAINLY_DISCORD_API="http://127.0.0.1:8102",
+                   PLAINLY_DISCORD_GATEWAY="ws://127.0.0.1:8103/")
+        proc = subprocess.Popen([sys.executable, PL, "run", os.path.join(EX, "discord_bot.plain")], env=env,
+                                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        try:
+            wait_for(lambda: len(dc.posts) >= 1 and dc.heartbeats >= 1)
+            time.sleep(1.5)
+            check("discord: replies once, ignoring bots and itself", len(dc.posts) == 1 and dc.posts[0][1] == {"content": "Hello Bob"}, str(dc.posts))
+            check("discord: sent to the right channel with the token", dc.posts and dc.posts[0][0] == "/channels/999/messages" and dc.posts[0][2] == "Bot TESTTOKEN")
+            check("discord: identifies with token and intents", dc.identify and dc.identify[0]["token"] == "TESTTOKEN" and dc.identify[0]["intents"] == 37376, str(dc.identify))
+            check("discord: keeps the connection alive", dc.heartbeats >= 1)
+            check("discord: user agent", dc.posts and dc.posts[0][3].startswith("DiscordBot ("))
+        finally:
+            proc.terminate()
+            proc.wait()
+
         print("Native")
         gcc = shutil.which("gcc") or shutil.which("cc")
         if gcc:

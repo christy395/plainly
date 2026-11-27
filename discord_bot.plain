@@ -1,0 +1,11 @@
+note A Discord bot. Create it at the Discord developer portal, turn on Message Content Intent, then set the secret PLAINLY_SECRET_DISCORD_TOKEN.
+allow running a Discord bot
+when a Discord message arrives do
+let said be the message text
+if said contains the words hello end words then
+reply with the words Hello followed by the message author
+otherwise if said contains the words help end words then
+reply with the words I can say hello. Try it!
+end if
+end when
+start the Discord bot
