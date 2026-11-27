@@ -592,10 +592,12 @@ The native backend currently supports numbers, text, yes/no values, number lists
 
 | Command | Purpose |
 |---|---|
-| `plainly run FILE [--host ADDRESS] [--port PORT] [--allow-host DOMAIN]` | Check and run a program; optional website hosting settings |
+| `plainly core-check FILE` | Parse and validate source with the independent Plainly core |
+| `plainly core-run FILE` | Run source with the independent Plainly core interpreter |
+| `plainly run FILE [--host ADDRESS] [--port PORT] [--allow-host DOMAIN]` | Check and run a legacy-compatible program; optional website hosting settings |
 | `plainly check FILE` | Check the program without running it |
 | `plainly fix FILE` | Write a separate repaired file when common mistakes can be fixed |
-| `plainly build FILE` | Print the generated Python |
+| `plainly build FILE` | Print generated Python for the legacy implementation |
 | `plainly c FILE` | Print the generated C for the native subset |
 | `plainly native FILE` | Build a native executable |
 | `plainly compile FILE` | Compile supported source to a binary `.pbc` file |
@@ -630,9 +632,12 @@ Run these checks from the repository root:
 
 ```sh
 python3 -m pip install ".[bots]"
-python3 -m py_compile plainly.py plainly_bytecode.py plainly_bots.py plainly_host.py
+python3 -m py_compile plainly.py plainly_bytecode.py plainly_bots.py plainly_host.py plainly_core.py
+python3 core_tests.py
 python3 audit_tests.py
 python3 bytecode_tests.py
+python3 plainly.py core-check core_hello.plain
+python3 plainly.py core-run core_hello.plain
 python3 bot_tests.py
 python3 hosting_tests.py
 node web_test.js
@@ -658,7 +663,7 @@ This release does not include Rust or Go compiler backends. The existing native 
 ## Known limitations
 
 - Plainly has not received an independent security audit and is not a secure sandbox.
-- The interpreter executes compiler-generated Python with the permissions of its operating-system process.
+- The legacy compatibility interpreter executes compiler-generated Python with the permissions of its operating-system process. The independent core directly interprets its own AST but still runs inside the host Python process.
 - File permissions, memory selection, bot handlers, and website routes are process-level runtime state. Run each tenant in a separate process and private workspace.
 - Plainly does not impose general CPU, memory, process-count, disk, network, or wall-clock quotas. Hosting providers must enforce these outside the runtime.
 - The built-in web server is small and should sit behind a managed HTTPS reverse proxy. It is not a full production web framework or a multi-tenant application server.
@@ -666,7 +671,8 @@ This release does not include Rust or Go compiler backends. The existing native 
 - Bytecode v1 is a compute-only subset; it does not support files, memory, websites, or bots.
 - The provider process adapter has an in-memory registry and does not implement persistent job recovery, customer authentication, billing, or OS isolation.
 - The native compiler supports only a subset of the language and produces an executable with the privileges of the account running it.
-- The browser editor and Python runtime support different language subsets.
+- The independent core is a preview and does not yet provide static type checking, functions, records, modules, compilation, browser execution, or full feature parity with the legacy language. Its documented resource limits are not a sandbox.
+- The browser editor and legacy Python runtime support different language subsets.
 
 ## Roadmap
 
