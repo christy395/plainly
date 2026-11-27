@@ -93,6 +93,13 @@ class PlainlyCoreTests(unittest.TestCase):
     def test_parentheses_and_precedence(self):
         self.assertEqual(core.run_source("say (2 plus 3) times 4\n"), "20\n")
 
+    def test_power_binds_more_tightly_than_unary_minus(self):
+        self.assertEqual(core.run_source("say -2 ** 2\n"), "-4\n")
+
+    def test_empty_largest_list_has_clear_error(self):
+        with self.assertRaisesRegex(core.PlainlyCoreError, "non-empty list"):
+            core.run_source("say largest([])\n")
+
     def test_english_greater_than(self):
         self.assertEqual(core.run_source("say 9 is greater than 4\n"), "yes\n")
 
