@@ -286,6 +286,72 @@ def _recall(name, spec):
 
 _ROUTES = {}
 _TL = threading.local()
+_BOT_HANDLERS = {}
+_BOT_LOCAL = threading.local()
+_SERVER_CONFIG = {"host": None, "port": None, "allowed_hosts": []}
+
+
+def _set_bot_handler(platform, handler):
+    _BOT_HANDLERS[platform] = handler
+
+
+def _bot_field(name):
+    event = getattr(_BOT_LOCAL, "event", None)
+    if event is None or name not in event:
+        raise PlainlyRuntimeError("that message detail is not available here")
+    return event[name]
+
+
+def _bot_reply(value):
+    reply = getattr(_BOT_LOCAL, "reply", None)
+    if reply is None:
+        raise PlainlyRuntimeError("'reply with' only works while handling a bot message")
+    reply(_show(value))
+
+
+def _start_bot(platform):
+    handler = _BOT_HANDLERS.get(platform)
+    if handler is None:
+        raise PlainlyRuntimeError("add a 'when a %s message arrives' handler before starting the bot" % platform.title())
+    secret_name = "PLAINLY_SECRET_%s_TOKEN" % platform.upper()
+    token = os.environ.get(secret_name, "")
+    if not token:
+        raise PlainlyRuntimeError("set %s in your hosting provider's app secrets before starting the bot" % secret_name)
+
+    def dispatch(event, reply):
+        _BOT_LOCAL.event = event
+        _BOT_LOCAL.reply = reply
+        try:
+            handler()
+        except (PlainlyRuntimeError, ZeroDivisionError) as exc:
+            print("Plainly bot handler stopped: %s" % exc, file=sys.stderr)
+        finally:
+            for attr in ("event", "reply"):
+                try:
+                    delattr(_BOT_LOCAL, attr)
+                except AttributeError:
+                    pass
+
+    try:
+        import plainly_bots
+        runner = plainly_bots.run_discord_bot if platform == "discord" else plainly_bots.run_telegram_bot
+        runner(token, dispatch)
+    except ImportError:
+        raise PlainlyRuntimeError("the optional Plainly bot runtime is not installed") from None
+    except plainly_bots.BotRuntimeError as exc:
+        raise PlainlyRuntimeError(str(exc)) from None
+
+
+def _normalise_host(value):
+    raw = str(value or "").strip().lower()
+    if not raw:
+        return ""
+    try:
+        return urlparse("//" + raw).hostname or ""
+    except ValueError:
+        return ""
+
+
 
 
 def _route(path, fn):
@@ -331,27 +397,59 @@ def _visitor(name):
 
 
 def _serve(port):
+    config = _SERVER_CONFIG
+    configured_port = config.get("port") or os.environ.get("PORT") or port
+    try:
+        port = int(configured_port)
+    except (TypeError, ValueError):
+        raise PlainlyRuntimeError("PORT must be a valid TCP port number")
+    if not 1 <= port <= 65535:
+        raise PlainlyRuntimeError("the configured port must be from 1 to 65535")
+
+    host = config.get("host") or os.environ.get("PLAINLY_HOST") or "127.0.0.1"
+    allowed = set()
+    for item in config.get("allowed_hosts", []):
+        name = _normalise_host(item)
+        if name:
+            allowed.add(name)
+    for item in os.environ.get("PLAINLY_ALLOWED_HOSTS", "").split(","):
+        name = _normalise_host(item)
+        if name:
+            allowed.add(name)
+    if host in ("127.0.0.1", "localhost", "::1"):
+        allowed.update(("127.0.0.1", "localhost", "::1"))
+    elif not allowed:
+        raise PlainlyRuntimeError(
+            "public website hosting requires at least one allowed domain; pass --allow-host YOUR_DOMAIN")
+
     class Handler(BaseHTTPRequestHandler):
+        server_version = "Plainly"
+        sys_version = ""
+
         def do_GET(self):
-            if self.headers.get("Host", "") not in ("127.0.0.1:%d" % port, "localhost:%d" % port):
-                self.send_error(403, "Wrong host")
+            request_host = _normalise_host(self.headers.get("Host", ""))
+            if not request_host or request_host not in allowed:
+                self.send_error(403, "Host not allowed")
                 return
             u = urlparse(self.path)
-            _TL.page = []
-            _TL.query = parse_qs(u.query)
-            fn = _ROUTES.get((u.path.rstrip("/") or "/").lower())
-            if fn is None:
-                code, kind, body = 404, "text", "That page does not exist."
+            if u.path.rstrip("/") == "/healthz":
+                code, kind, body = 200, "text", "ok"
             else:
-                try:
-                    with _LOCK:
-                        code, (kind, body) = 200, (fn() or ("text", ""))
-                except PlainlyRuntimeError as e:
-                    code, kind, body = 500, "text", "Plainly stopped this page: %s" % e
-                except ZeroDivisionError:
-                    code, kind, body = 500, "text", "Plainly stopped this page: cannot divide by zero"
-                except Exception:
-                    code, kind, body = 500, "text", "Plainly stopped this page: something went wrong."
+                _TL.page = []
+                _TL.query = parse_qs(u.query)
+                fn = _ROUTES.get((u.path.rstrip("/") or "/").lower())
+                if fn is None:
+                    code, kind, body = 404, "text", "That page does not exist."
+                else:
+                    try:
+                        with _LOCK:
+                            code, (kind, body) = 200, (fn() or ("text", ""))
+                    except PlainlyRuntimeError as e:
+                        code, kind, body = 500, "text", "Plainly stopped this page: %s" % e
+                    except ZeroDivisionError:
+                        code, kind, body = 500, "text", "Plainly stopped this page: cannot divide by zero"
+                    except Exception:
+                        code, kind, body = 500, "text", "Plainly stopped this page: something went wrong."
             data = body.encode("utf-8")
             self.send_response(code)
             self.send_header("Content-Type", ("text/html" if kind == "html" else "text/plain") + "; charset=utf-8")
@@ -368,11 +466,11 @@ def _serve(port):
             print("  %s %s" % (self.command, self.path))
 
     try:
-        srv = ThreadingHTTPServer(("127.0.0.1", port), Handler)
+        srv = ThreadingHTTPServer((host, port), Handler)
     except OSError:
-        raise PlainlyRuntimeError("could not start on port %d; it may already be in use" % port)
+        raise PlainlyRuntimeError("could not start on %s:%d; check the host and port" % (host, port))
     srv.daemon_threads = True
-    print("Serving on http://127.0.0.1:%d (press Ctrl+C to stop)" % port)
+    print("Serving Plainly on %s:%d (Ctrl+C to stop)" % (host, port))
     try:
         srv.serve_forever()
     except KeyboardInterrupt:
@@ -384,7 +482,8 @@ def _serve(port):
 RUNTIME = {n: globals()[n] for n in (
     "_show _say _cat _record _read _read_numbers _read_lines _write _count _at "
     "_length _sqrt _abs _largest _smallest _rounded _parsed _ask _orelse "
-    "_route _reply _el _box _btn _page _visitor _serve _use_memory _remember _recall").split()}
+    "_route _reply _el _box _btn _page _visitor _serve _use_memory _remember _recall "
+    "_set_bot_handler _bot_field _bot_reply _start_bot").split()}
 SAFE_BUILTINS = {"range": range, "len": len, "int": int}
 
 # ------------------------------------------------------------ C runtime
@@ -483,6 +582,9 @@ class Compiler:
         self.fieldnames = set()
         self.perms = set()
         self.route = False
+        self.bot_context = None
+        self.bot_permissions = set()
+        self.bot_handlers = {}
         self.memory = None
         self.routes = set()
         self.page_names = {}
@@ -968,8 +1070,12 @@ class Compiler:
         if kind == "define":
             self.fn = None
         if kind == "when":
-            self.emit("_route(%r, %s)" % (b["path"], b["py"]))
-            self.route = False
+            if b.get("bot_platform"):
+                self.emit("_set_bot_handler(%r, %s)" % (b["bot_platform"], b["py"]))
+                self.bot_context = None
+            else:
+                self.emit("_route(%r, %s)" % (b["path"], b["py"]))
+                self.route = False
         if self.blocks:
             term = False
             if kind == "if":
@@ -986,8 +1092,18 @@ class Compiler:
                            % (verb, name))
 
     def s_allow(self):
-        self.no_native("files")
         self.take()
+        if self.match("running", "a", "Discord", "bot"):
+            self.no_native("Discord bots")
+            self.finish()
+            self.bot_permissions.add("discord")
+            return
+        if self.match("running", "a", "Telegram", "bot"):
+            self.no_native("Telegram bots")
+            self.finish()
+            self.bot_permissions.add("telegram")
+            return
+        self.no_native("files")
         if self.match("reading"):
             kind = "read"
         elif self.match("writing"):
@@ -1031,10 +1147,28 @@ class Compiler:
 
     # ---- websites: routes, replies, pages
     def s_when(self):
-        self.no_native("servers")
+        self.no_native("servers and bots")
         if self.blocks:
-            raise self.err("'when someone visits' must be at the top level of the program")
+            raise self.err("'when' blocks must be at the top level of the program")
         self.take()
+        platform = None
+        if self.match("a", "Discord", "message", "arrives"):
+            platform = "discord"
+        elif self.match("a", "Telegram", "message", "arrives"):
+            platform = "telegram"
+        if platform:
+            if platform not in self.bot_permissions:
+                raise self.err("ask permission first with 'allow running a %s bot'" % platform.title())
+            if platform in self.bot_handlers:
+                raise self.err("this program already has a %s message handler" % platform.title())
+            self.expect("do")
+            self.finish()
+            py = "_plainly_%s_message_handler" % platform
+            self.bot_handlers[platform] = py
+            self.emit("def %s():" % py)
+            self.open_block("when", boundary=True, bot_platform=platform, py=py)
+            self.bot_context = platform
+            return
         self.expect("someone", "visits", "the", "path")
         words = self.words_until("do")
         self.expect("do")
@@ -1052,9 +1186,18 @@ class Compiler:
         self.page_names = {}
 
     def s_reply(self):
+        if self.bot_context:
+            self.no_native("bots")
+            self.take()
+            self.expect("with")
+            e, t = self.parse_or()
+            self.finish()
+            self.not_nothing(t)
+            self.emit("_bot_reply(%s)" % e)
+            return
         self.no_native("servers")
         if not self.route:
-            raise self.err("'reply' only works inside 'when someone visits the path'")
+            raise self.err("'reply' only works inside a website or bot message handler")
         self.take()
         self.expect("with")
         if self.match("the", "page"):
@@ -1146,10 +1289,26 @@ class Compiler:
         self.emit("_el(%r, %s, %r)" % ({"heading": "h2", "paragraph": "p"}[kind], e, name))
 
     def s_start(self):
-        self.no_native("servers")
+        self.no_native("servers and bots")
         if self.blocks:
-            raise self.err("'start the server' must be at the top level of the program")
+            raise self.err("'start' must be at the top level of the program")
         self.take()
+        if self.match("the", "Discord", "bot"):
+            self.finish()
+            if "discord" not in self.bot_permissions:
+                raise self.err("ask permission first with 'allow running a Discord bot'")
+            if "discord" not in self.bot_handlers:
+                raise self.err("add a 'when a Discord message arrives' handler before starting the bot")
+            self.emit("_start_bot('discord')")
+            return
+        if self.match("the", "Telegram", "bot"):
+            self.finish()
+            if "telegram" not in self.bot_permissions:
+                raise self.err("ask permission first with 'allow running a Telegram bot'")
+            if "telegram" not in self.bot_handlers:
+                raise self.err("add a 'when a Telegram message arrives' handler before starting the bot")
+            self.emit("_start_bot('telegram')")
+            return
         self.expect("the", "server", "on", "port")
         tok = self.take()
         self.finish()
@@ -1317,6 +1476,26 @@ class Compiler:
             if not self.route:
                 raise self.err("'the visitor sent' only works inside 'when someone visits the path'")
             return "_visitor(%r)" % self.take().lower(), "text"
+        if self.match("the", "message", "text"):
+            self.no_native("bots")
+            if not self.bot_context:
+                raise self.err("'the message text' only works inside a bot message handler")
+            return "_bot_field('text')", "text"
+        if self.match("the", "message", "author"):
+            self.no_native("bots")
+            if not self.bot_context:
+                raise self.err("'the message author' only works inside a bot message handler")
+            return "_bot_field('author')", "text"
+        if self.match("the", "message", "channel"):
+            self.no_native("bots")
+            if not self.bot_context:
+                raise self.err("'the message channel' only works inside a bot message handler")
+            return "_bot_field('channel')", "text"
+        if self.match("the", "message", "is", "from", "a", "bot"):
+            self.no_native("bots")
+            if not self.bot_context:
+                raise self.err("message details only work inside a bot message handler")
+            return "_bot_field('is_bot')", "truth"
         if self.match("what", "the", "user", "types"):
             return ("p_ask()" if self.native else "_ask()"), "text"
         for phrase, fn, rt in ((("the", "contents", "of", "the", "file"), "_read", "text"),
@@ -1473,6 +1652,9 @@ def run_source(src, filename="program"):
     py, perms = compile_source(src)
     PERMS.clear()
     PERMS.update(perms)
+    _ROUTES.clear()
+    _BOT_HANDLERS.clear()
+    _MEM["file"] = None
     ns = dict(RUNTIME)
     ns["__builtins__"] = SAFE_BUILTINS
     exec(compile(py, filename, "exec"), ns)
@@ -1635,10 +1817,45 @@ def main(argv):
         return 0
     if len(argv) == 2:
         argv = [argv[0], "run", argv[1]]
-    if len(argv) != 3 or argv[1] not in ("run", "check", "build", "c", "native", "fix", "compile", "execute"):
+    if len(argv) < 3 or argv[1] not in ("run", "check", "build", "c", "native", "fix", "compile", "execute"):
         print(__doc__)
         return 2
     cmd, path = argv[1], argv[2]
+    options = argv[3:]
+    config = {"host": None, "port": None, "allowed_hosts": []}
+    index = 0
+    while index < len(options):
+        option = options[index]
+        if option not in ("--host", "--port", "--allow-host") or index + 1 >= len(options):
+            print("Plainly run options: --host ADDRESS --port PORT --allow-host DOMAIN (repeatable)", file=sys.stderr)
+            return 2
+        value = options[index + 1]
+        if not value or value.startswith("--"):
+            print("Plainly run option %s needs a value" % option, file=sys.stderr)
+            return 2
+        if option == "--host":
+            config["host"] = value
+        elif option == "--port":
+            try:
+                port_value = int(value)
+            except ValueError:
+                print("--port must be a whole number from 1 to 65535", file=sys.stderr)
+                return 2
+            if not 1 <= port_value <= 65535:
+                print("--port must be a whole number from 1 to 65535", file=sys.stderr)
+                return 2
+            config["port"] = port_value
+        else:
+            if not re.fullmatch(r"[A-Za-z0-9.:-]+", value):
+                print("--allow-host must be a host name or IP address", file=sys.stderr)
+                return 2
+            config["allowed_hosts"].append(value)
+        index += 2
+    if cmd != "run" and options:
+        print("run options can only be used with the run command", file=sys.stderr)
+        return 2
+    _SERVER_CONFIG.clear()
+    _SERVER_CONFIG.update(config)
     if cmd in ("compile", "execute"):
         from plainly_bytecode import BytecodeError, compile_file, run_file
         try:
