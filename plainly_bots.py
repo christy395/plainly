@@ -108,12 +108,12 @@ def run_telegram_bot(token, handler, stop_event=None):
 def _discord_request(api, token, channel_id, text):
     if not re.fullmatch(r"[0-9]{1,24}", str(channel_id)):
         raise BotRuntimeError("Discord supplied an invalid channel identifier")
-    _api_result(_json_request(
+    _json_request(
         "%s/channels/%s/messages" % (api.rstrip("/"), channel_id),
         {"content": str(text)},
         headers={"Authorization": "Bot " + token,
                  "User-Agent": "DiscordBot (https://github.com/christy395/plainly, 1.2.0)"},
-    ), "Discord")
+    )
 
 
 def _discord_session(token, handler, api, gateway):
