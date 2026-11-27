@@ -152,7 +152,7 @@ def _validate_program(program):
         raise CoreBytecodeError("invalid instruction sequence")
     valid_lines = range(0, core.MAX_SOURCE_LINES + 1)
     for index, item in enumerate(code):
-        if not isinstance(item, list) or not item or item[0] not in OPS:
+        if not isinstance(item, list) or not item or not isinstance(item[0], str) or item[0] not in OPS:
             raise CoreBytecodeError("invalid instruction at index %d" % index)
         op = item[0]
         expected = {
@@ -183,11 +183,11 @@ def _validate_program(program):
                         raise CoreBytecodeError("numeric constant is outside the supported range")
                 except OverflowError:
                     raise CoreBytecodeError("numeric constant is outside the supported range")
-        if op == "UNARY" and item[1] not in ("not", "-"):
+        if op == "UNARY" and (not isinstance(item[1], str) or item[1] not in ("not", "-")):
             raise CoreBytecodeError("invalid unary operator")
-        if op == "BINARY" and item[1] not in _ALLOWED_BINARY:
+        if op == "BINARY" and (not isinstance(item[1], str) or item[1] not in _ALLOWED_BINARY):
             raise CoreBytecodeError("invalid binary operator")
-        if op == "CALL" and (item[1] not in _ALLOWED_CALLS or type(item[2]) is not int or not 0 <= item[2] <= 16):
+        if op == "CALL" and (not isinstance(item[1], str) or item[1] not in _ALLOWED_CALLS or type(item[2]) is not int or not 0 <= item[2] <= 16):
             raise CoreBytecodeError("invalid builtin call")
         if op == "BUILD_LIST" and (type(item[1]) is not int or not 0 <= item[1] <= core.MAX_COLLECTION_ITEMS):
             raise CoreBytecodeError("invalid list size")
