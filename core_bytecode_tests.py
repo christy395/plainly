@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 """Regression tests for Plainly's independent core bytecode backend."""
+import hashlib
+import struct
 import unittest
 
 import plainly_core as core
@@ -40,18 +42,16 @@ class CoreBytecodeTests(unittest.TestCase):
 
     def test_nested_repeat_and_conditionals(self):
         self.assertBothBackends(
-            "let total be 0\\nrepeat 2 times do\\nrepeat 3 times do\\nset total to total plus 1\\nend repeat\\nend repeat\\nif total is equal to 6 then\\nsay total\\nend if\\n",
-            "6\\n",
+            "let total be 0\nrepeat 2 times do\nrepeat 3 times do\nset total to total plus 1\nend repeat\nend repeat\nif total is equal to 6 then\nsay total\nend if\n",
+            "6\n",
         )
 
     def test_unary_minus_rejects_non_numbers_cleanly(self):
         with self.assertRaisesRegex(core.PlainlyCoreError, "needs numbers"):
-            bytecode.run_source('say -"text"\\n')
+            bytecode.run_source('say -"text"\n')
 
     def test_duplicate_json_keys_are_rejected(self):
         payload = b'{"format":1,"format":1,"code":[["HALT"]]}'
-        import hashlib
-        import struct
         blob = bytecode.MAGIC + struct.pack(">HI", bytecode.VERSION, len(payload)) + hashlib.sha256(payload).digest() + payload
         with self.assertRaisesRegex(bytecode.CoreBytecodeError, "duplicate"):
             bytecode.loads(blob)
@@ -86,13 +86,13 @@ class CoreBytecodeTests(unittest.TestCase):
             bytecode.dumps(program)
 
     def test_non_text_opcode_is_rejected_cleanly(self):
-        program = bytecode.compile_source("say 1\\n")
+        program = bytecode.compile_source("say 1\n")
         program["code"][0][0] = []
         with self.assertRaisesRegex(bytecode.CoreBytecodeError, "invalid instruction"):
             bytecode.dumps(program)
 
     def test_non_text_operator_is_rejected_cleanly(self):
-        program = bytecode.compile_source("say 1 plus 2\\n")
+        program = bytecode.compile_source("say 1 plus 2\n")
         for instruction in program["code"]:
             if instruction[0] == "BINARY":
                 instruction[1] = []
