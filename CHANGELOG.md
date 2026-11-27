@@ -29,6 +29,7 @@
 - Add differential compiler/VM tests for arithmetic, conditions, loops, lists, built-ins, short-circuit logic, Unicode, malformed bytecode, tampering, and execution limits.
 - Harden bytecode validation against duplicate JSON keys, early HALT instructions, invalid jumps, malformed operands, and unsafe numeric values.
 - Extend the Windows, macOS, and Linux CI matrix to compile, test, and execute independent core bytecode samples.
+- Add a documented independent-core threat model and deterministic seeded source/bytecode fuzz regression tests, executed on every CI platform.
 
 
 - Pin the separate cross-platform CI workflow to Ubuntu 24.04, Windows Server 2022, and macOS 15 so runner-image changes do not silently break Python compatibility jobs.
