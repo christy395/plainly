@@ -5,7 +5,7 @@
 - Start the independent Plainly core with its own tokenizer, parser, AST, and interpreter.
 - Add core-run and core-check commands without routing independent-core source through generated Python, JavaScript, or C.
 - Support variables, reassignment, numbers, text, yes/no values, lists, arithmetic, comparisons, boolean logic, conditions, while loops, repeat loops, and selected built-ins in the core preview.
-- Add UTF-8 source handling and explicit source, line, token, nesting, instruction, numeric, text, and collection limits.
+- Add UTF-8 source handling, descriptor-based no-follow file loading where supported, bounded reads, and strict regular-file checks.\n- Add validated instruction budgets, aggregate variable/value/text limits, and cumulative output limits.
 - Add independent core regression tests and CI coverage.
 - Document the core grammar, limitations, security boundary, and long-term compiler, WebAssembly, frontend, backend, and package-manager roadmap.
 - Keep the legacy 1.4 commands available while the new core is incomplete; the default run command has not yet migrated.
