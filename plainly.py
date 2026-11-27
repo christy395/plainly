@@ -1664,6 +1664,16 @@ def run_source(src, filename="program"):
     exec(compile(py, filename, "exec"), ns)
 
 
+def _native_executable_path(path, windows=None):
+    """Return a target-appropriate executable filename for the current OS."""
+    if windows is None:
+        windows = os.name == "nt"
+    executable = os.path.splitext(path)[0]
+    if windows and not executable.lower().endswith(".exe"):
+        executable += ".exe"
+    return executable
+
+
 def build_native(src, path):
     import os
     import shutil
@@ -1673,7 +1683,7 @@ def build_native(src, path):
     cc = shutil.which("gcc") or shutil.which("cc") or shutil.which("clang")
     if not cc:
         raise PlainlyRuntimeError("native needs a C compiler (gcc, cc or clang); none was found")
-    exe = os.path.splitext(path)[0]
+    exe = _native_executable_path(path)
     with tempfile.TemporaryDirectory() as d:
         cfile = os.path.join(d, "program.c")
         with open(cfile, "w") as f:
@@ -1935,7 +1945,11 @@ def main(argv):
             return fix_file(path, src)
         elif cmd == "native":
             exe = build_native(src, path)
-            print("Built %s. Run it with: ./%s" % (exe, exe))
+            if os.name == "nt":
+                run_target = os.path.relpath(os.path.abspath(exe), os.getcwd()).replace("/", "\\")
+                print('Built %s. Run it from PowerShell with: & ".\\%s"' % (exe, run_target))
+            else:
+                print("Built %s. Run it with: ./%s" % (exe, exe))
         else:
             run_source(src, path)
     except PlainlyError as e:
