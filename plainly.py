@@ -411,7 +411,8 @@ def _serve(port):
     if os.environ.get("PLAINLY_DEBUG_SERVER") == "1":
         import faulthandler
         import signal
-        faulthandler.register(signal.SIGUSR1, file=sys.stderr, all_threads=True)
+        if hasattr(signal, "SIGUSR1") and hasattr(faulthandler, "register"):
+            faulthandler.register(signal.SIGUSR1, file=sys.stderr, all_threads=True)
     try:
         port = int(configured_port)
     except (TypeError, ValueError):
