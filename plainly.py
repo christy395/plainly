@@ -1965,7 +1965,6 @@ def main(argv):
                 for n in fx[1]:
                     print("  " + n, file=sys.stderr)
                 if input("Fix it and run? [y/N] ").strip().lower() in ("y", "yes"):
-                    import os
                     fixed = os.path.splitext(path)[0] + ".fixed.plain"
                     with open(fixed, "w", encoding="utf-8") as f:
                         f.write(fx[0] + "\n")
