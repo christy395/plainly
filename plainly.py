@@ -430,7 +430,7 @@ static const char *p_ask(void) { char *b = malloc(4096); if (!fgets(b, 4096, std
 
 # --------------------------------------------------------------- compiler
 NUM = re.compile(r"^\d+(\.\d+)?$")
-VERSION = "1.1.1"
+VERSION = "1.2.0"
 TEXT_SPAN = re.compile(r"\bthe\s+words\b.*?(?:\bend\s+words\b|$)", re.I)
 FORBIDDEN = set('_:"()[]{};')
 RESERVED = set("""be to of is and or not then do end plus minus times divided by modulo
