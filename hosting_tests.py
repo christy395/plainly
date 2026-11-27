@@ -15,6 +15,8 @@ import plainly_host
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 PLAINLY = os.path.join(ROOT, "plainly.py")
+# Local test traffic must not be routed through CI proxy environment settings.
+LOCAL_OPENER = urllib.request.build_opener(urllib.request.ProxyHandler({}))
 
 
 def free_port():
@@ -31,7 +33,7 @@ def request(port, path, host):
         headers={"Host": "%s:%d" % (host, port)},
     )
     try:
-        with urllib.request.urlopen(req, timeout=3) as response:
+        with LOCAL_OPENER.open(req, timeout=3) as response:
             return response.status, response.read().decode("utf-8")
     except urllib.error.HTTPError as exc:
         return exc.code, exc.read().decode("utf-8")
