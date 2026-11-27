@@ -23,6 +23,7 @@
 
 ## Unreleased
 
+- Run deterministic core fuzz cases and independent core bytecode CLI regression tests in the full Windows/macOS/Linux audit matrix.
 - Add the independent core AST-to-bytecode VM module and its differential, malformed-file, and execution-budget tests to the full cross-platform audit workflow and documented local test commands.
 - Add an independent AST-to-bytecode compiler for the Plainly core, with a bounded stack VM and a checksummed versioned `.core.pbc` container.
 - Add `core-compile` and `core-execute` CLI commands without using Python's AST module or generated Python code.
