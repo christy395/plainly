@@ -13,6 +13,7 @@ from dataclasses import dataclass
 VERSION = "0.1.0"
 MAX_SOURCE_BYTES = 1024 * 1024
 MAX_LINE_LENGTH = 8192
+MAX_SOURCE_LINES = 100000
 MAX_TOKENS = 50000
 MAX_AST_DEPTH = 128
 MAX_STEPS = 100000
@@ -80,7 +81,10 @@ def tokenize(source):
     if size > MAX_SOURCE_BYTES:
         raise PlainlyCoreError("source is larger than the 1 MiB limit")
 
+    if source.count("\n") > MAX_SOURCE_LINES:
+        raise PlainlyCoreError("source contains too many lines")
     result = []
+    token_count = 0
     for line_no, raw in enumerate(source.splitlines(), 1):
         if len(raw) > MAX_LINE_LENGTH:
             raise PlainlyCoreError("line is longer than the 8192-character limit", line_no)
@@ -126,7 +130,8 @@ def tokenize(source):
             else:
                 line_tokens.append(Token(value, kind, line_no))
             pos = match.end()
-        if len(result) + len(line_tokens) > MAX_TOKENS:
+        token_count += len(line_tokens)
+        if token_count > MAX_TOKENS:
             raise PlainlyCoreError("program contains too many tokens", line_no)
         if line_tokens:
             result.append(tuple(line_tokens))
@@ -294,7 +299,10 @@ class Parser:
             raise PlainlyCoreError("expected an expression")
         return ExpressionParser(tokens).finish()
 
-    def block(self, stop_words=()):
+    def block(self, stop_words=(), depth=0):
+        if depth > MAX_AST_DEPTH:
+            token = self.peek()[0] if self.peek() else None
+            raise PlainlyCoreError("block nesting is too deep", token.line if token else None)
         result = []
         while self.pos < len(self.lines):
             tokens = self.peek()
@@ -324,14 +332,14 @@ class Parser:
                 if len(tokens) < 3 or words[-1] != "then":
                     raise PlainlyCoreError("use: if expression then", line)
                 condition = self.expression(tokens[1:-1])
-                body = self.block(("otherwise",))
+                body = self.block(("otherwise",), depth + 1)
                 alternate = ()
                 if self.peek() and self.line_text(self.peek())[0] == "otherwise":
                     other = self.peek()
                     if len(other) != 1:
                         raise PlainlyCoreError("'otherwise' must be on its own line", other[0].line)
                     self.pos += 1
-                    alternate = self.block()
+                    alternate = self.block(depth=depth + 1)
                 if not self.peek() or self.line_text(self.peek()) != ["end", "if"]:
                     raise PlainlyCoreError("if block needs 'end if'", line)
                 self.pos += 1
@@ -340,7 +348,7 @@ class Parser:
                 if len(tokens) < 3 or words[-1] != "do":
                     raise PlainlyCoreError("use: while expression do", line)
                 condition = self.expression(tokens[1:-1])
-                body = self.block()
+                body = self.block(depth=depth + 1)
                 if not self.peek() or self.line_text(self.peek()) != ["end", "while"]:
                     raise PlainlyCoreError("while block needs 'end while'", line)
                 self.pos += 1
@@ -349,7 +357,7 @@ class Parser:
                 if len(tokens) < 4 or words[-2:] != ["times", "do"]:
                     raise PlainlyCoreError("use: repeat number times do", line)
                 count = self.expression(tokens[1:-2])
-                body = self.block()
+                body = self.block(depth=depth + 1)
                 if not self.peek() or self.line_text(self.peek()) != ["end", "repeat"]:
                     raise PlainlyCoreError("repeat block needs 'end repeat'", line)
                 self.pos += 1
@@ -412,7 +420,7 @@ class Interpreter:
         self.tick(expr.line)
         kind, value = expr.kind, expr.value
         if kind == "literal":
-            return value
+            return self.checked_number(value, expr.line) if _is_number(value) else value
         if kind == "name":
             if value not in self.variables:
                 raise PlainlyCoreError("unknown name %r" % value, expr.line)
@@ -440,11 +448,11 @@ class Interpreter:
             if value == "largest" and len(args) == 1 and isinstance(args[0], list) and args[0]:
                 if not all(_is_number(item) for item in args[0]):
                     raise PlainlyCoreError("largest needs a list of numbers", expr.line)
-                return max(args[0])
+                return self.checked_number(max(args[0]), expr.line)
             if value == "smallest" and len(args) == 1 and isinstance(args[0], list) and args[0]:
                 if not all(_is_number(item) for item in args[0]):
                     raise PlainlyCoreError("smallest needs a list of numbers", expr.line)
-                return min(args[0])
+                return self.checked_number(min(args[0]), expr.line)
             raise PlainlyCoreError("unknown function or wrong inputs for %r" % value, expr.line)
 
         left = self.evaluate(expr.children[0])
