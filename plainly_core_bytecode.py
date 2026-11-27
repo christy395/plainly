@@ -50,7 +50,16 @@ class Compiler:
         return len(self.code) - 1
 
     def patch(self, index, target):
-        self.code[index][-1] = target
+        if type(index) is not int or not 0 <= index < len(self.code):
+            raise CoreBytecodeError("invalid compiler patch location")
+        if type(target) is not int or target < 0:
+            raise CoreBytecodeError("invalid compiler jump target")
+        instruction = self.code[index]
+        if instruction[0] not in ("JUMP", "JUMP_FALSE", "JUMP_TRUE", "REPEAT_START", "REPEAT_NEXT"):
+            raise CoreBytecodeError("compiler patch target is not a jump instruction")
+        # Jump instructions store their target at operand 1 and source line
+        # metadata at operand 2. Never overwrite the source-line field.
+        instruction[1] = target
 
     def expression(self, expr):
         kind, value = expr.kind, expr.value
