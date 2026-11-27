@@ -108,6 +108,12 @@ class PlainlyAuditRegressionTests(unittest.TestCase):
         self.assertIn("&lt;script&gt;", plainly._TL.page[0])
         self.assertNotIn("<script>", plainly._TL.page[0])
 
+
+    def test_native_executable_name_is_platform_appropriate(self):
+        self.assertEqual(plainly._native_executable_path("speed.plain", windows=False), "speed")
+        self.assertEqual(plainly._native_executable_path("speed.plain", windows=True), "speed.exe")
+        self.assertEqual(plainly._native_executable_path("speed.exe.plain", windows=True), "speed.exe")
+
     def test_native_backend_emits_a_compilable_program_shape(self):
         source, _ = plainly.compile_source("say 42", native=True)
         self.assertIn("int main(void)", source)
