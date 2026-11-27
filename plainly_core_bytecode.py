@@ -25,7 +25,7 @@ OPS = {
     "JUMP": 11, "JUMP_FALSE": 12, "JUMP_TRUE": 13,
     "REPEAT_START": 14, "REPEAT_NEXT": 15, "HALT": 16,
 }
-_ALLOWED_BINARY = {"+", "-", "*", "/", "//", "%", "**", "==", "!=", "<", "<=", ">", ">=", "and", "or"}
+_ALLOWED_BINARY = {"+", "-", "*", "/", "//", "%", "**", "==", "!=", "<", "<=", ">", ">="}
 _ALLOWED_CALLS = {"length", "sqrt", "absolute", "largest", "smallest"}
 
 
@@ -437,7 +437,7 @@ def compile_file(source_path, output_path=None):
     blob = dumps(compile_source(source))
     if output_path is None:
         output_path = os.path.splitext(source_path)[0] + ".core.pbc"
-    flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, "O_CLOEXEC", 0)
+    flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, "O_BINARY", 0) | getattr(os, "O_CLOEXEC", 0)
     flags |= getattr(os, "O_NOFOLLOW", 0)
     try:
         fd = os.open(output_path, flags, 0o600)
@@ -456,7 +456,10 @@ def compile_file(source_path, output_path=None):
 
 
 def run_file(path, max_steps=core.MAX_STEPS):
-    flags = os.O_RDONLY | getattr(os, "O_CLOEXEC", 0) | getattr(os, "O_NOFOLLOW", 0)
+    nofollow = getattr(os, "O_NOFOLLOW", 0)
+    if not nofollow and os.path.islink(path):
+        raise CoreBytecodeError("symbolic links are not allowed for bytecode input")
+    flags = os.O_RDONLY | getattr(os, "O_BINARY", 0) | getattr(os, "O_CLOEXEC", 0) | nofollow
     try:
         fd = os.open(path, flags)
     except OSError:
