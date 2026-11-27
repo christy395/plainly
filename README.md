@@ -692,10 +692,10 @@ This release does not include Rust or Go compiler backends. The existing native 
 - The built-in web server is small and should sit behind a managed HTTPS reverse proxy. It is not a full production web framework or a multi-tenant application server.
 - Discord and Telegram integrations currently support simple text-message handling and text replies only. They do not yet cover slash commands, interactions, reactions, attachments, voice, or Telegram webhooks.
 - Bytecode v1 is a compute-only subset; it does not support files, memory, websites, or bots.
-- The provider process adapter has an in-memory registry and does not implement persistent job recovery, customer authentication, billing, or OS isolation.
+- The provider process adapter has an in-memory registry and does not implement persistent job recovery, customer authentication, billing, or OS isolation. Its stop operation validates finite timeouts, and Discord Gateway sessions poll provider stop requests during receive waits.
 - The native compiler supports only a subset of the language and produces an executable with the privileges of the account running it.
 - The independent core is a preview and does not yet provide static type checking, functions, records, modules, compilation, browser execution, or full feature parity with the legacy language. Its documented resource limits are not a sandbox.
-- The browser editor and legacy Python runtime support different language subsets.
+- The browser editor and legacy Python runtime support different language subsets. The browser editor is the portable option on modern phones and tablets; the Python CLI is for Python-capable desktop environments, and native Android/iOS packaging remains planned.
 
 ## Roadmap
 
@@ -710,6 +710,7 @@ This release does not include Rust or Go compiler backends. The existing native 
 - [x] A Python process adapter for provider-managed app lifecycle and logs.
 - [x] Local mock-based integration tests for bot and hosting behavior.
 - [x] Discord Gateway heartbeat scheduling, acknowledgement checks, reconnect handling, and safe mention defaults.
+- [x] Responsive browser editor viewport support for mobile browsers and graceful local-storage failure handling.
 - [x] Cross-platform app/game project manifest, secure-default capability policy, scaffolding, and validation for five target families.
 - [x] Automated interpreter regression coverage on Windows, macOS, and Linux, with matching browser and native-build checks.
 - [x] Cross-platform HTTP hosting integration checks use direct loopback TCP and tolerate malformed-request logging.
