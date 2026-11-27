@@ -2,7 +2,7 @@
 const el=()=>({value:"",textContent:"",className:"",appendChild(){},addEventListener(){},setAttribute(){},set onclick(f){},set onchange(f){}});
 const els={};globalThis.document={getElementById:id=>els[id]||(els[id]=el()),createElement:()=>el()};
 globalThis.localStorage={getItem:()=>null,setItem(){}};
-const html=require("fs").readFileSync(process.argv[2]||require("path").join(__dirname,"..","plainly-web.html"),"utf8");
+const html=require("fs").readFileSync(process.argv[2]||require("path").join(__dirname,"plainly-web.html"),"utf8");
 (0,eval)(html.match(/<script>([\s\S]*)<\/script>/)[1]+"\n;globalThis.__t={compile,execute,autofix,EX};");
 const {compile,execute,autofix,EX}=globalThis.__t;
 let pass=0,fail=0;
