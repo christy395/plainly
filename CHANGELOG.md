@@ -23,6 +23,7 @@
 
 ## Unreleased
 
+- Add the independent core AST-to-bytecode VM module and its differential, malformed-file, and execution-budget tests to the full cross-platform audit workflow and documented local test commands.
 - Add an independent AST-to-bytecode compiler for the Plainly core, with a bounded stack VM and a checksummed versioned `.core.pbc` container.
 - Add `core-compile` and `core-execute` CLI commands without using Python's AST module or generated Python code.
 - Add differential compiler/VM tests for arithmetic, conditions, loops, lists, built-ins, short-circuit logic, Unicode, malformed bytecode, tampering, and execution limits.
