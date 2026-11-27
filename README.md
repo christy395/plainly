@@ -712,6 +712,7 @@ This release does not include Rust or Go compiler backends. The existing native 
 - [x] Discord Gateway heartbeat scheduling, acknowledgement checks, reconnect handling, and safe mention defaults.
 - [x] Cross-platform app/game project manifest, secure-default capability policy, scaffolding, and validation for five target families.
 - [x] Automated interpreter regression coverage on Windows, macOS, and Linux, with matching browser and native-build checks.
+- [x] Cross-platform HTTP hosting integration checks use direct loopback TCP and tolerate malformed-request logging.
 
 ### Security hardening completed in 1.5.0
 
