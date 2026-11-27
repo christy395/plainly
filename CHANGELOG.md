@@ -23,6 +23,10 @@
 
 ## Unreleased
 
+- Make Discord bot shutdown responsive to provider stop events instead of waiting for a full Gateway heartbeat interval.
+- Validate hosting process stop timeouts and reject booleans, non-finite values, strings, negative values, and excessive waits.
+- Add regression coverage for prompt Discord shutdown and invalid provider stop timeouts.
+
 - Add opt-in macOS stack dumps when the local server integration test cannot bring up its listener.
 - Add opt-in server startup diagnostics to help troubleshoot platform-specific listener startup issues.
 - Correct HTTP CRLF framing in the cross-platform hosting integration test and make server access logging safe for malformed requests.
