@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.1
+
+- Reject symbolic links, hard-linked files, and non-regular files in permitted runtime file access.
+- Add focused security regression tests and CI checks for Python, browser, and native paths.
+- Publish security boundaries, known limitations, and audit deployment guidance.
+
+
 ## 1.1.0
 
 - Easier text: it ends by itself before `followed by`, `joined to`, `that asks` and `and the words`.
