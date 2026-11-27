@@ -1,0 +1,11 @@
+note a visit counter that remembers between restarts
+allow remembering in the file memory.json
+when someone visits the path home do
+let visits be what I remember called visits as a number or else 0
+let total be visits plus 1
+remember total as visits
+show a heading with the words Visit counter end words
+show a paragraph with the words You are visitor number end words followed by total
+reply with the page
+end when
+start the server on port 8097

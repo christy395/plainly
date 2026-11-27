@@ -1,0 +1,24 @@
+note count primes below a limit, a speed test
+define prime check of number as number giving truth
+if number is less than 2 then
+give back false
+end if
+let divisor be 2
+while divisor times divisor is at most number do
+if number modulo divisor is 0 then
+give back false
+end if
+add 1 to divisor
+end while
+give back true
+end define
+
+let count be 0
+let candidate be 2
+while candidate is less than 200000 do
+if prime check of candidate then
+add 1 to count
+end if
+add 1 to candidate
+end while
+say the words Primes below 200000 end words followed by count

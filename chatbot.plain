@@ -1,0 +1,22 @@
+note a chatbot that lives on your own server and follows rules you write
+when someone visits the path home do
+show a heading with the words Chat with my bot
+show a box called message
+show a paragraph called reply with the words Say hello, ask for help, or say bye.
+show a button with the words Send that asks the path talk and shows the reply in the paragraph called reply
+reply with the page
+end when
+when someone visits the path talk do
+let said be the visitor sent message
+if said contains the words hello end words then
+reply with the words Hello! Nice to meet you.
+end if
+if said contains the words help end words then
+reply with the words I can say hello and bye. Try those!
+end if
+if said contains the words bye end words then
+reply with the words Goodbye! Come back soon.
+end if
+reply with the words I did not understand that. Try saying hello.
+end when
+start the server on port 8094

@@ -1,0 +1,15 @@
+note a tiny website with two pages
+when someone visits the path home do
+show a heading with the words Welcome to my site end words
+show a paragraph with the words Built in plain English. end words
+reply with the page
+end when
+when someone visits the path hello do
+let who be the visitor sent name
+if who is the words end words then
+reply with the words Hello, stranger. end words
+otherwise
+reply with the words Hello end words followed by who
+end if
+end when
+start the server on port 8099

@@ -1,0 +1,23 @@
+note native friendly: lists, loops, text, functions
+define fizz of number as number giving text
+if number modulo 15 is 0 then
+give back the words FizzBuzz end words
+otherwise if number modulo 3 is 0 then
+give back the words Fizz end words
+otherwise if number modulo 5 is 0 then
+give back the words Buzz end words
+end if
+give back the words end words joined to number
+end define
+repeat 1 times do
+say fizz of 15
+say fizz of 9
+say fizz of 10
+say fizz of 7
+end repeat
+let scores be a list of 4 and 8 and 15
+add 16 to scores
+for each score in scores do
+say the words score end words followed by score times 2
+end for
+say the words biggest end words followed by largest of scores followed by the words of end words followed by length of scores

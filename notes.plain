@@ -1,0 +1,27 @@
+note a notes app: the page, the server, and a memory that lasts
+allow remembering in the file notes.json
+when someone visits the path home do
+show a heading with the words My notes end words
+let notes be what I remember called notes as a list of text or else an empty list of text
+for each saved in notes do
+show a paragraph with saved
+end for
+show a box called note
+show a paragraph called answer with the words Write something and press the button. end words
+show a button with the words Save note end words that asks the path save and shows the reply in the paragraph called answer
+reply with the page
+end when
+when someone visits the path save do
+let newnote be the visitor sent note
+if newnote is the words end words then
+reply with the words Please write something first. end words
+end if
+if length of newnote is greater than 200 then
+reply with the words That note is too long. end words
+end if
+let notes be what I remember called notes as a list of text or else an empty list of text
+add newnote to notes
+remember notes as notes
+reply with the words Saved. Reload the page to see it. end words
+end when
+start the server on port 8096

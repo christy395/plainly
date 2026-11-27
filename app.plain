@@ -1,0 +1,20 @@
+note a small app where the page and the server talk to each other
+when someone visits the path home do
+show a heading with the words Add two numbers end words
+show a box called first
+show a box called second
+show a paragraph called answer with the words Type two numbers, then press the button. end words
+show a button with the words Add them end words that asks the path add and shows the reply in the paragraph called answer
+reply with the page
+end when
+when someone visits the path add do
+let first be parsed number of the visitor sent first
+let second be parsed number of the visitor sent second
+if first has a value as x then
+if second has a value as y then
+reply with the words The sum is end words followed by x plus y
+end if
+end if
+reply with the words Please type two whole numbers. end words
+end when
+start the server on port 8098

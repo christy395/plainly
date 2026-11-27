@@ -1,0 +1,26 @@
+note a small shop with a record, a function, and a loop
+a record called item has name as text and price as number and quantity as number
+
+define total price of items as a list of item giving a number
+let sum be 0
+for each item in items do
+add price of item times quantity of item to sum
+end for
+give back sum
+end define
+
+define describe of number as number giving text
+if number is greater than 10 then
+give back the words big end words
+otherwise
+give back the words small end words
+end if
+end define
+
+let basket be an empty list of item
+add a new item with name the words apple end words and price 3 and quantity 2 to basket
+add a new item with name the words pear end words and price 4 and quantity 5 to basket
+let total be total price of basket
+say the words Total is end words followed by total
+say the words That is a end words followed by describe of total followed by the words order end words
+say entry 1 of basket

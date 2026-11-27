@@ -1,0 +1,2 @@
+let secret be the contents of the file passwords.txt
+say secret

@@ -1,0 +1,5 @@
+define sign of number as number giving text
+if number is greater than 0 then
+give back the words positive end words
+end if
+end define

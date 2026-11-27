@@ -1,0 +1,6 @@
+note Welcome! Each line is one sentence. A line that starts with note is a comment for people.
+note say shows something. Put words after the words.
+say the words Hello! I am your first program.
+say the words You can say numbers too
+say 42
+note Try changing the words, then press Run.

@@ -1,0 +1,12 @@
+note if runs lines only when something is true. end if closes it.
+let score be 7
+if score is greater than 5 then
+say the words Great score!
+otherwise
+say the words Keep practicing.
+end if
+note Compare with is, is not, is less than, is at least, is at most.
+note and, or and not combine choices.
+if score is at least 5 and score is less than 10 then
+say the words Between 5 and 9.
+end if

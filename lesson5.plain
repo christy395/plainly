@@ -1,0 +1,10 @@
+note a list holds many values of the same kind. Separate them with and.
+let pets be a list of the words cat and the words dog and the words fish
+note when more words come after text, close the text with end words.
+add the words bird end words to pets
+for each pet in pets do
+say the words I like followed by pet
+end for
+say the words I have followed by length of pets followed by the words pets
+note entry 1 of pets is the first one.
+say entry 1 of pets

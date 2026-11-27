@@ -1,0 +1,10 @@
+note define makes your own command. give back sends a value out.
+define double of number as number giving number
+give back number times 2
+end define
+say double of 21
+note a command can take several inputs. Join them with with.
+define add up of first as number with second as number giving number
+give back first plus second
+end define
+say add up of 4 with 5

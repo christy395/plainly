@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Plainly</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+:root{--bg:#E9EFF7;--paper:#FBFDFF;--line:#D3DFEE;--margin:#E8A5B4;--ink:#13233F;--sub:#53627A;--pen:#2455D9;--penfg:#fff;--out:#13233F;--outfg:#E7EEF9;--err:#FFB4A8;--bd:#B9C8DC;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0D1524;--paper:#16213A;--line:#22304F;--margin:#7A3A4A;--ink:#E7EEF9;--sub:#9DB0CC;--pen:#7FA2FF;--penfg:#0D1524;--out:#0A101C;--outfg:#E7EEF9;--err:#FFB4A8;--bd:#33466B}}
+:root[data-theme="dark"]{--bg:#0D1524;--paper:#16213A;--line:#22304F;--margin:#7A3A4A;--ink:#E7EEF9;--sub:#9DB0CC;--pen:#7FA2FF;--penfg:#0D1524;--out:#0A101C;--outfg:#E7EEF9;--err:#FFB4A8;--bd:#33466B}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 17px/1.5 "Atkinson Hyperlegible",system-ui,sans-serif}
+main{max-width:1080px;margin:0 auto;padding:20px 16px 40px}
+h1{font-size:2rem;margin:0;letter-spacing:-.01em}
+.tag{margin:4px 0 18px;color:var(--sub)}
+.bar{display:flex;gap:10px;margin-bottom:12px}
+select,button{font:inherit;border-radius:10px;border:1px solid var(--bd);padding:10px 12px;min-height:44px}
+select{flex:1;min-width:0;background:var(--paper);color:var(--ink)}
+button{background:var(--pen);color:var(--penfg);border-color:var(--pen);font-weight:700;padding:10px 22px;cursor:pointer}
+:focus-visible{outline:3px solid var(--pen);outline-offset:2px}
+.grid{display:grid;gap:14px}
+@media (min-width:860px){.grid{grid-template-columns:1fr 1fr}}
+textarea{width:100%;min-height:340px;resize:vertical;border:1px solid var(--bd);border-radius:12px;padding:12px 14px 12px 44px;font:inherit;line-height:28px;color:var(--ink);background:var(--paper);
+background-image:linear-gradient(90deg,transparent 31px,var(--margin) 31px,var(--margin) 32px,transparent 32px),repeating-linear-gradient(transparent 0,transparent 27px,var(--line) 27px,var(--line) 28px);background-attachment:local;background-position:0 12px}
+.out{min-height:340px;margin:0;background:var(--out);color:var(--outfg);border-radius:12px;padding:14px 16px;white-space:pre-wrap;overflow-wrap:anywhere;font:inherit}
+.out.bad{color:var(--err)}
+.st{color:var(--sub);font-size:.9rem;margin:8px 2px 0}
+.note{margin-top:22px;color:var(--sub);font-size:.92rem;max-width:70ch}
+.pg{display:none;margin-top:14px;padding:14px 16px;border:1px solid var(--bd);border-radius:12px;background:var(--paper)}.pg.on{display:block}.pg h2{margin:0 0 8px;font-size:1.3rem}.pg p{margin:6px 0}.pg input{display:block;width:100%;max-width:340px;min-height:44px;margin:8px 0;padding:8px 10px;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--bd);border-radius:8px}.pg button{margin:6px 6px 6px 0}
+#fx{background:var(--paper);color:var(--ink);border-color:var(--bd);padding:10px 14px}h1 small{font-size:.9rem;color:var(--sub);font-weight:400}
+</style>
+</head>
+<body>
+<main>
+<h1>Plainly <small>1.1</small></h1>
+<p class="tag">Write programs in plain English. It runs right here, on any device, with nothing to install. Pick a lesson to start.</p>
+<div class="bar">
+<select id="ex" aria-label="Example programs"></select>
+<button id="go">Run</button>
+<button id="fx" hidden>Fix it</button>
+</div>
+<div class="grid">
+<div><textarea id="ed" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Your program"></textarea></div>
+<div><pre class="out" id="out" aria-live="polite">Press Run to see what your program says.</pre><p class="st" id="st"></p><div class="pg" id="pg"></div></div>
+</div>
+<p class="note">Everything runs in your browser and nothing is sent anywhere. Your program is turned into JavaScript, which browsers run very fast, and it can only do what Plainly allows: no files, no network. Pages built here are live: headings, text, boxes and buttons. If something goes wrong, a Fix it button appears when I can repair it. Not here yet: records, maybe values, files, and servers; for those, use the Python version. Press Ctrl and Enter to run from a keyboard.</p>
+</main>
+<script>
+"use strict";
+const EX={
+"Lesson 1 - Say something":"note Welcome! Each line is one sentence. A line that starts with note is a comment for people.\nnote say shows something. Put words after the words.\nsay the words Hello! I am your first program.\nsay the words You can say numbers too\nsay 42\nnote Try changing the words, then press Run.\n",
+"Lesson 2 - Remember things":"note let gives a name to a value. A name can be several words.\nlet my name be the words Sam\nlet my age be 12\nnote followed by joins things together with a space.\nsay my name followed by the words is followed by my age\nnote set changes a value. add and subtract change numbers.\nset my age to 13\nadd 1 to my age\nsay the words Next year Sam is followed by my age\n",
+"Lesson 3 - Make choices":"note if runs lines only when something is true. end if closes it.\nlet score be 7\nif score is greater than 5 then\nsay the words Great score!\notherwise\nsay the words Keep practicing.\nend if\nnote Compare with is, is not, is less than, is at least, is at most.\nnote and, or and not combine choices.\nif score is at least 5 and score is less than 10 then\nsay the words Between 5 and 9.\nend if\n",
+"Lesson 4 - Repeat things":"note repeat runs lines a number of times.\nrepeat 3 times do\nsay the words Hip hip hooray!\nend repeat\nnote while keeps going as long as something is true.\nlet count be 1\nwhile count is at most 3 do\nsay the words Counting followed by count\nadd 1 to count\nend while\n",
+"Lesson 5 - Lists":"note a list holds many values of the same kind. Separate them with and.\nlet pets be a list of the words cat and the words dog and the words fish\nnote when more words come after text, close the text with end words.\nadd the words bird end words to pets\nfor each pet in pets do\nsay the words I like followed by pet\nend for\nsay the words I have followed by length of pets followed by the words pets\nnote entry 1 of pets is the first one.\nsay entry 1 of pets\n",
+"Lesson 6 - Your own commands":"note define makes your own command. give back sends a value out.\ndefine double of number as number giving number\ngive back number times 2\nend define\nsay double of 21\nnote a command can take several inputs. Join them with with.\ndefine add up of first as number with second as number giving number\ngive back first plus second\nend define\nsay add up of 4 with 5\n",
+"Lesson 7 - Make a page":"note show puts things on a page: a heading, a paragraph, a box or a button.\nnote Give things a name with called, then change them when a button is clicked.\nlet count be 0\nshow a heading with the words Click counter\nshow a paragraph called score with the words Clicks so far 0\nshow a button called add one with the words Add one\nwhen the button called add one is clicked do\nadd 1 to count\nset the text of the paragraph called score to the words Clicks so far followed by count\nend when\n",
+"Lesson 8 - A chatbot":"note A chatbot follows rules you write, like a tiny robot with a script.\nnote contains checks if text includes some words. It ignores capital letters.\nnote Text that is followed by then must be closed with end words.\nshow a heading with the words Chat with my bot\nshow a box called message\nshow a paragraph called reply with the words Say hello, ask for help, or say bye.\nshow a button called talk with the words Send\nwhen the button called talk is clicked do\nlet said be the text in the box called message\nif said contains the words hello end words then\nset the text of the paragraph called reply to the words Hello! Nice to meet you.\notherwise if said contains the words help end words then\nset the text of the paragraph called reply to the words I can say hello and bye. Try those!\notherwise if said contains the words bye end words then\nset the text of the paragraph called reply to the words Goodbye! Come back soon.\notherwise\nset the text of the paragraph called reply to the words I did not understand that. Try saying hello.\nend if\nend when\n",
+"Hello":"note my first program\nsay the words Hello, world.\n",
+"Lists":"let scores be a list of 4 and 8 and 15 and 16\nadd 23 to scores\nlet total be 0\nfor each score in scores do\nadd score to total\nend for\nsay the words Total end words followed by total\nsay the words Biggest end words followed by largest of scores\nsay the words Count end words followed by length of scores\n",
+"FizzBuzz":"define fizz of number as number giving text\nif number modulo 15 is 0 then\ngive back the words FizzBuzz end words\notherwise if number modulo 3 is 0 then\ngive back the words Fizz end words\notherwise if number modulo 5 is 0 then\ngive back the words Buzz end words\nend if\ngive back the words end words joined to number\nend define\nfor each n in a list of 1 and 2 and 3 and 5 and 9 and 10 and 15 do\nsay fizz of n\nend for\n",
+"Factorial":"define factorial of n as number giving number\nif n is at most 1 then\ngive back 1\nend if\nlet smaller be n minus 1\ngive back n times factorial of smaller\nend define\nsay the words 10 factorial is end words followed by factorial of 10\n",
+"Counter page":"let count be 0\nshow a heading with the words Click counter end words\nshow a paragraph called score with the words Clicks so far 0 end words\nshow a button called add one with the words Add one end words\nwhen the button called add one is clicked do\nadd 1 to count\nset the text of the paragraph called score to the words Clicks so far end words followed by count\nend when\n",
+"Greeter page":"show a heading with the words Greeter end words\nshow a box called who\nshow a paragraph called hello with the words Type a name end words\nshow a button called greet with the words Greet end words\nwhen the button called greet is clicked do\nset the text of the paragraph called hello to the words Hello end words followed by the text in the box called who\nend when\n",
+"Speed test":"note count the primes below one million\ndefine prime check of number as number giving truth\nif number is less than 2 then\ngive back false\nend if\nlet divisor be 2\nwhile divisor times divisor is at most number do\nif number modulo divisor is 0 then\ngive back false\nend if\nadd 1 to divisor\nend while\ngive back true\nend define\nlet count be 0\nlet candidate be 2\nwhile candidate is less than 1000000 do\nif prime check of candidate then\nadd 1 to count\nend if\nadd 1 to candidate\nend while\nsay the words Primes below one million end words followed by count\n"};
+
+class PErr extends Error{constructor(m,l){super(m);this.line=l}}
+class RT extends Error{}
+const RES=new Set("be to of is and or not then do end plus minus times divided by modulo followed joined in as with giving from true false the a an let set say add subtract define give run note if otherwise while repeat for each entry".split(" "));
+const BAD=/[_:"(){}\[\];]/;
+const CM=[["is","greater","than",">"],["is","less","than","<"],["is","at","least",">="],["is","at","most","<="],["is","not","!=="],["is","==="]];
+const tn=x=>x.startsWith("list ")?"a list of "+x.slice(5):x;
+const mk=()=>Object.create(null);
+
+function compile(src){
+const out=[],blocks=[],funcs=Object.assign(mk(),{
+"length":{p:[["thing","any"]],r:"number",js:"_len"},
+"square root":{p:[["value","number"]],r:"number",js:"_sqrt"},
+"absolute value":{p:[["value","number"]],r:"number",js:"Math.abs"},
+"rounded":{p:[["value","number"]],r:"number",js:"_round"},
+"largest":{p:[["values","list number"]],r:"number",js:"_max"},
+"smallest":{p:[["values","list number"]],r:"number",js:"_min"}});
+const scopes=[{v:mk(),b:1}],UI=mk();let fn=null,line=0,t=[],i=0;
+const E=m=>new PErr(m,line);
+const pk=(k=0)=>i+k<t.length?t[i+k].toLowerCase():null;
+const mt=(...w)=>{for(let k=0;k<w.length;k++)if(pk(k)!==w[k])return false;i+=w.length;return true};
+const ex=(...w)=>{if(!mt(...w))throw E("I expected the word '"+w.join(" ")+"' here but found "+(i<t.length?t[i]:"the end of the sentence"))};
+const fin=()=>{if(i<t.length)throw E("I did not expect '"+t.slice(i).join(" ")+"' here")};
+const upto=(...s)=>{const r=[];while(i<t.length&&!s.includes(pk()))r.push(t[i++]);return r};
+const vis=()=>{const o=mk();for(let k=scopes.length-1;k>=0;k--){for(const n in scopes[k].v)if(!(n in o))o[n]=scopes[k].v[n];if(scopes[k].b)break}return o};
+const longest=(c,off=0,needOf=false)=>{for(let n=Math.min(6,t.length-i-off);n>0;n--){const s=t.slice(i+off,i+off+n).join(" ").toLowerCase();if(s in c&&(!needOf||pk(off+n)==="of"))return n}return 0};
+const nn=x=>{if(x==="nothing")throw E("that gives back nothing, so there is no value to use")};
+const ty=()=>{if(!mt("a"))if(!mt("an"))mt("the");if(mt("list","of")){const x=ty();if(x.startsWith("list "))throw E("lists of lists are not supported yet");return "list "+x}for(const b of["number","text","truth"])if(mt(b))return b;throw E("I expected a type here: number, text, truth, or a list of ...")};
+const nname=(w,isf)=>{if(!w.length)throw E("I expected a name here");if(w.length>6)throw E("a name can be at most 6 words long");const n=w.join(" ").toLowerCase();if(/^\d/.test(w[0])||n==="true"||n==="false")throw E("'"+n+"' cannot be used as a name; a name cannot start with a number");if(n in vis()||(n in funcs&&(isf||!funcs[n].p.length)))throw E("the name '"+n+"' is already used");return n};
+const decl=(n,tp)=>{const j="v_"+n.replace(/[^a-z0-9]/g,"_");scopes[scopes.length-1].v[n]=[tp,j];return j};
+const blk=(k,x)=>{blocks.push(Object.assign({k,l:line,term:0},x));scopes.push({v:mk(),b:x&&x.b?1:0})};
+const top=()=>blocks[blocks.length-1];
+
+const prim=()=>{
+if(i>=t.length)throw E("I expected a value here but the sentence ended");
+const w=t[i],l=w.toLowerCase();
+if(/^\d+(\.\d+)?$/.test(w)){i++;return[w,"number"]}
+if(l==="true"||l==="false"){i++;return[l,"truth"]}
+if(mt("the","words")){const r=[];while(i<t.length){if(pk()==="end"&&pk(1)==="words"){i+=2;break}if((pk()==="followed"&&pk(1)==="by")||(pk()==="joined"&&pk(1)==="to")||(pk()==="that"&&pk(1)==="asks")||(pk()==="and"&&pk(1)==="the"&&pk(2)==="words"))break;r.push(t[i++])}return[JSON.stringify(r.join(" ")),"text"]}
+if(mt("an","empty","list","of"))return["[]","list "+ty()];
+if(mt("a","list","of")){const it=[cat()];while(pk()==="and"){i++;it.push(cat())}const t0=it[0][1];for(const x of it)if(x[1]!==t0)throw E("everything in a list must be the same kind, but I see "+tn(t0)+" and "+tn(x[1]));if(t0.startsWith("list ")||t0==="nothing")throw E("a list can hold numbers, text, or yes and no values");return["["+it.map(x=>x[0]).join(",")+"]","list "+t0]}
+if(mt("entry")){const a=prim();ex("of");const b=prim();if(a[1]!=="number"||!b[1].startsWith("list "))throw E("use: entry NUMBER of LIST");return["_at("+b[0]+","+a[0]+")",b[1].slice(5)]}
+if(pk()==="the"&&(pk(1)==="text"||pk(1)==="number")&&pk(2)==="in"){const nu=pk(1)==="number";i+=3;ex("the","box","called");const bn=longest(UI);if(!bn)throw E("there is no box with that name; show it first");const nm=t.slice(i,i+bn).join(" ").toLowerCase();if(UI[nm]!=="box")throw E("'"+nm+"' is not a box");i+=bn;return[(nu?"_getn(":"_get(")+JSON.stringify(nm)+")",nu?"number":"text"]}
+const FV=vis();if(!longest(FV)&&!longest(funcs))mt("the");
+const fpar=mk(),fz=mk();for(const k in funcs)(funcs[k].p.length?fpar:fz)[k]=1;
+let n=longest(fpar,0,true);if(!n)n=longest(fz);
+if(n){const nm=t.slice(i,i+n).join(" ").toLowerCase();i+=n;const f=funcs[nm],ar=[];
+if(f.p.length){if(!mt("of"))throw E("'"+nm+"' needs input: "+nm+" of "+f.p.map(x=>x[0]).join(" with "));
+f.p.forEach((p,k)=>{if(k)ex("with");const a=prim();
+if(p[1]==="any"){if(a[1]!=="text"&&!a[1].startsWith("list "))throw E("'"+nm+"' needs text or a list, but got "+tn(a[1]))}
+else if(a[1]!==p[1])throw E("'"+nm+"' needs "+tn(p[1])+" for '"+p[0]+"' but got "+tn(a[1]));ar.push(a[0])})}
+return[f.js+"("+ar.join(",")+")",f.r]}
+const V=vis();n=longest(V);
+if(n){const nm=t.slice(i,i+n).join(" ").toLowerCase();i+=n;return[V[nm][1],V[nm][0]]}
+n=longest(fpar);if(n){const fnm=t.slice(i,i+n).join(" ");throw E("'"+fnm+"' needs input, like: "+fnm+" of ...")}
+throw E("I do not know what '"+w+"' means here")};
+
+const nums=(o,a,b)=>{if(a!=="number"||b!=="number")throw E("'"+o+"' needs two numbers but got "+tn(a)+" and "+tn(b)+(a==="text"||b==="text"?". To join text, use 'followed by'.":""))};
+const mul=()=>{let[l,lt]=prim();for(;;){let o,nmz;if(pk()==="times"&&pk(1)!=="do"){i++;o="*";nmz="times"}else if(mt("divided","by")){o="/";nmz="divided by"}else if(mt("modulo")){o="%";nmz="modulo"}else return[l,lt];const[r,rt]=prim();nums(nmz,lt,rt);l=o==="/"?"_d("+l+","+r+")":o==="%"?"_m("+l+","+r+")":"("+l+"*"+r+")";lt="number"}};
+const add=()=>{let[l,lt]=mul();for(;;){let o,nmz;if(mt("plus")){o="+";nmz="plus"}else if(mt("minus")){o="-";nmz="minus"}else return[l,lt];const[r,rt]=mul();nums(nmz,lt,rt);l="("+l+o+r+")";lt="number"}};
+const cat=()=>{let[l,lt]=add();for(;;){let sp;if(mt("followed","by"))sp=1;else if(mt("joined","to"))sp=0;else return[l,lt];const[r,rt]=add();nn(lt);nn(rt);l="_c("+l+","+r+","+sp+")";lt="text"}};
+const cmp=()=>{const[l,lt]=cat();if(pk()==="contains"){i++;const[r,rt]=cat();if(lt!=="text"||rt!=="text")throw E("'contains' works on text, like: message contains the words hello");return["("+l+".toLowerCase().includes("+r+".toLowerCase()))","truth"]}for(const c of CM){if(mt(...c.slice(0,-1))){const op=c[c.length-1],[r,rt]=cat();if(lt!==rt)throw E("cannot compare "+tn(lt)+" with "+tn(rt));if(lt.startsWith("list "))throw E("lists cannot be compared yet");if(!/^[!=]/.test(op)&&lt!=="number"&&lt!=="text")throw E("only numbers and text can be put in order");return["("+l+op+r+")","truth"]}}return[l,lt]};
+const tr=(o,a,b)=>{if(a!=="truth"||b!=="truth")throw E("'"+o+"' works on yes or no values, but got "+tn(a)+" and "+tn(b))};
+const nt=()=>{if(mt("not")){const[e,x]=nt();tr("not",x,x);return["(!"+e+")","truth"]}return cmp()};
+const an=()=>{let[l,lt]=nt();while(mt("and")){const[r,rt]=nt();tr("and",lt,rt);l="("+l+"&&"+r+")";lt="truth"}return[l,lt]};
+const expr=()=>{let[l,lt]=an();while(mt("or")){const[r,rt]=an();tr("or",lt,rt);l="("+l+"||"+r+")";lt="truth"}return[l,lt]};
+const fv=()=>{const V=vis(),n=longest(V);if(!n)throw E("I do not know a name called '"+(i<t.length?t[i]:"")+"'");const nm=t.slice(i,i+n).join(" ").toLowerCase();i+=n;return[nm,V[nm]]};
+const cond=stop=>{const[e,x]=expr();ex(stop);fin();if(x!=="truth")throw E("a condition must be a yes or no value, but this is "+tn(x));return e};
+
+const sy=()=>{i++;const[e,x]=expr();fin();nn(x);out.push("_say("+e+");")};
+const le=()=>{i++;const ws=upto("be");if(!mt("be"))throw E("a let sentence needs the word 'be', like: let total be 0");const n=nname(ws),[e,x]=expr();fin();nn(x);out.push("let "+decl(n,x)+"="+e+";")};
+const se=()=>{i++;if(mt("the","text","of","the")){const k=pk();if(k!=="paragraph"&&k!=="heading"&&k!=="button")throw E("use: set the text of the paragraph called NAME to ...");i++;ex("called");const n=longest(UI);if(!n)throw E("there is no element with that name; show it first");const nm=t.slice(i,i+n).join(" ").toLowerCase();i+=n;ex("to");const[e,x]=cat();fin();if(x!=="text")throw E("the text must be text, but this is "+tn(x));out.push("_put("+JSON.stringify(nm)+","+e+");");return}const[nm,[vt,j]]=fv();ex("to");const[e,x]=expr();fin();if(x!==vt)throw E("'"+nm+"' holds "+tn(vt)+", so it cannot be set to "+tn(x));out.push(j+"="+e+";")};
+const ad=()=>{i++;const[e,x]=expr();ex("to");const[nm,[vt,j]]=fv();fin();
+if(vt==="number"&&x==="number")out.push(j+"+="+e+";");
+else if(vt.startsWith("list ")&&vt.slice(5)===x)out.push(j+".push("+e+");");
+else throw E("cannot add "+tn(x)+" to '"+nm+"', which holds "+tn(vt))};
+const su=()=>{i++;const[e,x]=expr();ex("from");const[nm,[vt,j]]=fv();fin();if(vt!=="number"||x!=="number")throw E("subtract works on numbers only");out.push(j+"-="+e+";")};
+const iff=()=>{i++;const c=cond("then");out.push("if("+c+"){");blk("if",{br:[],el:0})};
+const other=()=>{const b=top();if(!b||b.k!=="if"||b.el)throw E("'otherwise' must come inside an 'if' block");b.br.push(b.term);b.term=0;scopes.pop();scopes.push({v:mk(),b:0});i++;
+if(mt("if")){const c=cond("then");out.push("}else if("+c+"){")}else{fin();out.push("}else{");b.el=1}};
+const wh=()=>{i++;const c=cond("do");out.push("while("+c+"){if(++_s>4e8)_stop();");blk("while")};
+const rp=()=>{i++;const[e,x]=expr();ex("times");ex("do");fin();if(x!=="number")throw E("repeat needs a number of times");out.push("for(let r"+line+"=_n("+e+");r"+line+"-->0;){if(++_s>4e8)_stop();");blk("repeat")};
+const fe=()=>{i++;ex("each");const ws=upto("in");ex("in");const[e,x]=expr();ex("do");fin();if(!x.startsWith("list "))throw E("'for each' needs a list, but this is "+tn(x));const n=nname(ws);blk("for");const j=decl(n,x.slice(5));out.push("for(const "+j+" of "+e+"){")};
+const df=()=>{if(blocks.length)throw E("'define' must be at the top level of the program");i++;const n=nname(upto("of","giving"),1),ps=[];
+if(mt("of")){do{const pw=upto("as");ex("as");if(!pw.length)throw E("each input needs a name");ps.push([pw.join(" ").toLowerCase(),ty()])}while(mt("with"))}
+let r="nothing";if(mt("giving"))r=ty();fin();
+const js="f_"+n.replace(/[^a-z0-9]/g,"_");funcs[n]={p:ps,r,js};fn=funcs[n];blk("define",{b:1});
+out.push("function "+js+"("+ps.map(p=>decl(p[0],p[1])).join(",")+"){")};
+const give=()=>{if(!fn)throw E("'give back' only works inside a define");i+=2;const[e,x]=expr();fin();if(fn.r==="nothing")throw E("this define has no 'giving' type, so it cannot give anything back");if(x!==fn.r)throw E("this define promises "+tn(fn.r)+" but gives back "+tn(x));out.push("return "+e+";");top().term=1};
+const rn=()=>{i++;const[e]=prim();fin();out.push(e+";")};
+const end=()=>{i++;const k=pk();if(!blocks.length)throw E("this 'end' has nothing to close");const b=top();
+if(k!==b.k)throw E("this closes '"+k+"', but the open block from line "+b.l+" needs 'end "+b.k+"'");i++;fin();
+if(k==="define"&&fn.r!=="nothing"&&!b.term)throw E("this define promises "+tn(fn.r)+", but some path through it never gives back a value");
+blocks.pop();scopes.pop();out.push(k==="when"?"});":"}");if(k==="define")fn=null;
+if(blocks.length)top().term=(k==="if"&&b.el&&[...b.br,b.term].every(Boolean))?1:0};
+const sh=()=>{i++;if(!mt("a"))mt("an");const k=pk();if(!["heading","paragraph","button","box"].includes(k))throw E("show a heading, paragraph, button or box");i++;let nm="";if(mt("called")){nm=upto("with").join(" ").toLowerCase();if(!nm)throw E("a name is needed after 'called'");if(nm in UI)throw E("the name '"+nm+"' is already used by a "+UI[nm]);UI[nm]=k}else if(k==="button")throw E("a button needs a name: show a button called NAME with ...");let tx='""';if(mt("with")){const[e,x]=cat();if(x!=="text")throw E("the words must be text, but this is "+tn(x));tx=e}else if(k!=="box")throw E("use: show a "+k+" with the words ...");fin();out.push("_ui("+JSON.stringify(k)+","+JSON.stringify(nm)+","+tx+");")};
+const wn=()=>{i++;ex("the","button","called");const nm=upto("is").join(" ").toLowerCase();if(UI[nm]!=="button")throw E("there is no button called '"+nm+"'; show it first");ex("is","clicked","do");fin();out.push("_on("+JSON.stringify(nm)+",()=>{");blk("when")};
+const T=Object.assign(mk(),{say:sy,show:sh,when:wn,let:le,set:se,add:ad,subtract:su,if:iff,while:wh,repeat:rp,for:fe,define:df,run:rn});
+const stmt=()=>{const w=pk();if(w==="note")return;if(w==="end")return end();if(w==="otherwise")return other();
+if(blocks.length)top().term=0;if(w==="give"&&pk(1)==="back")return give();
+if(w in T)return T[w]();throw E("I do not know how to start a sentence with '"+t[i]+"'")};
+
+src.split("\n").forEach((raw,n)=>{const s=raw.trim();if(!s)return;line=n+1;t=s.split(/\s+/);i=0;
+const s2=s.replace(/\bthe\s+words\b.*?(?:\bend\s+words\b|$)/gi,"");if(!/^note(\s|$)/i.test(s)&&BAD.test(s2))throw E("Plainly does not use the symbol "+s2.match(BAD)[0]+" outside text; write it in words, or put it inside: the words ... end words");stmt()});
+if(blocks.length)throw new PErr("this block is never closed; it needs 'end "+top().k+"'",top().l);
+return out.join("\n")}
+
+function show(x){if(typeof x==="boolean")return x?"yes":"no";if(typeof x==="number")return Number.isInteger(x)?String(x):String(+x.toPrecision(10));if(Array.isArray(x))return x.length?x.map(show).join(" and "):"nothing";return String(x)}
+function execute(code){
+const lines=[],els=[],on=mk(),dom=mk();
+const R={_ui:(k,n,t)=>{els.push({k,n,t})},_on:(n,f)=>{on[n]=f},_get:n=>dom[n]?dom[n].value:((els.find(e=>e.n===n)||{}).t||""),_getn:n=>{const s=String(R._get(n)).trim(),v=Number(s);if(s===""||Number.isNaN(v))throw new RT("the box called "+n+" does not hold a number");return v},_put:(n,t)=>{if(dom[n])dom[n].textContent=t;else{const e=els.find(x=>x.n===n);if(e)e.t=t}},_say:x=>{if(lines.length<5000)lines.push(show(x))},_c:(a,b,s)=>show(a)+(s?" ":"")+show(b),
+_d:(a,b)=>{if(b===0)throw new RT("cannot divide by zero");return a/b},_m:(a,b)=>{if(b===0)throw new RT("cannot divide by zero");return a%b},
+_n:n=>{if(n<0||!Number.isInteger(n))throw new RT("repeat needs a whole number that is not negative");return n},
+_at:(l,k)=>{if(!Number.isInteger(k)||k<1||k>l.length)throw new RT("entry "+show(k)+" does not exist; the list has "+l.length+" entries");return l[k-1]},
+_len:x=>x.length,_sqrt:x=>{if(x<0)throw new RT("cannot take the square root of a negative number");return Math.sqrt(x)},
+_round:x=>Math.floor(x+.5),_max:l=>{if(!l.length)throw new RT("largest of an empty list");return Math.max(...l)},_min:l=>{if(!l.length)throw new RT("smallest of an empty list");return Math.min(...l)}};
+const pre='"use strict";let _s=0;const _stop=()=>{throw new RT("this program ran for too long, so I stopped it")};';
+new Function("RT",...Object.keys(R),pre+code)(RT,...Object.values(R));
+return{lines,els,on,dom}}
+
+const KW="note say let set add subtract if otherwise while repeat for define give run when show end".split(" "),AL={print:"say",echo:"say",display:"say",println:"say",else:"otherwise",elif:"otherwise if",elseif:"otherwise if",return:"give back",var:"let",const:"let",endif:"end if",endwhile:"end while",endfor:"end for",enddefine:"end define",endrepeat:"end repeat",endwhen:"end when"},EN=["if","while","repeat","for","define","when"],TS=/\bthe\s+words\b.*?(?:\bend\s+words\b|$)/gi;
+const lev=(a,b)=>{const d=[];for(let i=0;i<=a.length;i++)d[i]=[i];for(let j=1;j<=b.length;j++)d[0][j]=j;for(let i=1;i<=a.length;i++)for(let j=1;j<=b.length;j++){d[i][j]=Math.min(d[i-1][j]+1,d[i][j-1]+1,d[i-1][j-1]+(a[i-1]===b[j-1]?0:1));if(i>1&&j>1&&a[i-1]===b[j-2]&&a[i-2]===b[j-1])d[i][j]=Math.min(d[i][j],d[i-2][j-2]+1)}return d[a.length][b.length]};
+const near=(w,l,min)=>{let best=null,bs=0;for(const k of l){const s=1-lev(w,k)/Math.max(w.length,k.length);if(s>bs){bs=s;best=k}}return bs>=min?best:null};
+const clean=s=>s.replace(/_/g," ").replace(/[:;()\[\]{}]/g," ");
+const noSym=l=>{l=l.replace(/"([^"]*)"/g,(m,a)=>"the words "+a.trim()+" end words");let o="",p=0,m;TS.lastIndex=0;while((m=TS.exec(l))){o+=clean(l.slice(p,m.index))+m[0];p=m.index+m[0].length}return(o+clean(l.slice(p))).replace(/[ \t]+/g," ").trim()};
+const fixLine=raw=>{const l0=raw.trim();if(!l0||/^note(\s|$)/i.test(l0))return l0;const t=noSym(l0).split(" "),w=t[0].toLowerCase();
+if(Object.hasOwn(AL,w)){if((w==="var"||w==="const")&&t.includes("="))t[t.indexOf("=")]="be";t[0]=AL[w]}else if(!KW.includes(w)){const c=near(w,KW.filter(k=>k.length>2),.6);if(c)t[0]=c}
+if(t[0]==="end"&&t[1]&&!EN.includes(t[1].toLowerCase())){const c=near(t[1].toLowerCase(),EN,.6);if(c)t[1]=c}
+let l=t.join(" ");const f=t[0].toLowerCase(),f2=(t[1]||"").toLowerCase(),last=t[t.length-1].toLowerCase();
+if((f==="if"||(f==="otherwise"&&f2==="if"))&&last!=="then")l+=" then";else if((f==="while"||(f==="for"&&f2==="each")||f==="repeat")&&last!=="do")l+=" do";return l};
+const autofix=src=>{const L=src.split("\n"),notes=[];for(let i=0;i<L.length;i++)if(L[i].trim()){const n=fixLine(L[i]);if(n!==L[i].trim())notes.push("line "+(i+1)+": "+L[i].trim()+"  ->  "+n);L[i]=n}
+let ok=false;for(let k=0;k<40;k++){try{compile(L.join("\n"));ok=true;break}catch(x){if(!(x instanceof PErr))break;const m=x.message,n=x.line-1;let g;
+if(/never closed/.test(m)&&(g=m.match(/needs 'end (\w+)'/))){L.push("end "+g[1]);notes.push("added 'end "+g[1]+"' at the end")}
+else if(g=m.match(/closes '(\w+)', but .*needs 'end (\w+)'/)){L[n]=L[n].replace(/^end\s+\w+/i,"end "+g[2]);notes.push("line "+x.line+": end "+g[1]+"  ->  end "+g[2])}
+else if(/'plus' needs two numbers/.test(m)&&/followed by/.test(m)){L[n]=L[n].replace(/\bplus\b/i,"followed by");notes.push("line "+x.line+": plus  ->  followed by")}
+else break}}
+return{text:L.join("\n"),notes,ok}};
+const $=id=>document.getElementById(id),ed=$("ed"),out=$("out"),st=$("st"),sel=$("ex"),fx=$("fx");
+for(const k in EX){const o=document.createElement("option");o.textContent=k;sel.appendChild(o)}
+function load(k){ed.value=EX[k];out.className="out";out.textContent="Press Run to see what your program says.";st.textContent=""}
+sel.onchange=()=>load(sel.value);
+function render(r){const pg=$("pg");pg.textContent="";pg.className="pg"+(r.els.length?" on":"");
+for(const e of r.els){const d=document.createElement({heading:"h2",paragraph:"p",button:"button",box:"input"}[e.k]);
+if(e.k==="box"){d.value=e.t;d.placeholder=e.n;d.setAttribute("aria-label",e.n)}else d.textContent=e.t;
+if(e.k==="button")d.onclick=()=>{try{if(r.on[e.n])r.on[e.n]()}catch(x){out.className="out bad";out.textContent=x instanceof RT?"Plainly stopped the program: "+x.message:"Plainly stopped the program: something unexpected went wrong."}};
+if(e.n)r.dom[e.n]=d;pg.appendChild(d)}}
+function run(){
+const t0=performance.now();out.className="out";st.textContent="";$("pg").textContent="";$("pg").className="pg";fx.hidden=true;
+try{const code=compile(ed.value);const r=execute(code),lines=r.lines;render(r);out.textContent=lines.length?lines.join("\n"):(r.els.length?"The page is below.":"The program ran and said nothing.");
+st.textContent="Finished in "+Math.max(1,Math.round(performance.now()-t0))+" ms."}
+catch(e){out.className="out bad";
+if(e instanceof PErr){const src=ed.value.split("\n")[e.line-1];let msg="Plainly found a problem.\nLine "+e.line+": "+e.message+"\n\n"+(src||"").trim();const f=autofix(ed.value);if(f.notes.length&&f.ok){msg+="\n\nI can fix this for you:\n"+f.notes.map(n=>"- "+n).join("\n");fx.hidden=false;fx.onclick=()=>{ed.value=f.text;try{localStorage.setItem("plainly-program",f.text)}catch(z){}run()}}out.textContent=msg}
+else if(e instanceof RT)out.textContent="Plainly stopped the program: "+e.message;
+else out.textContent="Plainly stopped the program: something unexpected went wrong.";}}
+$("go").onclick=run;
+ed.addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&e.key==="Enter"){e.preventDefault();run()}});
+let saved=null;try{saved=localStorage.getItem("plainly-program")}catch(e){}
+if(saved){ed.value=saved}else load("Lesson 1 - Say something");
+ed.addEventListener("input",()=>{try{localStorage.setItem("plainly-program",ed.value)}catch(e){}});
+</script>
+</body>
+</html>

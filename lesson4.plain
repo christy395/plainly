@@ -1,0 +1,10 @@
+note repeat runs lines a number of times.
+repeat 3 times do
+say the words Hip hip hooray!
+end repeat
+note while keeps going as long as something is true.
+let count be 1
+while count is at most 3 do
+say the words Counting followed by count
+add 1 to count
+end while

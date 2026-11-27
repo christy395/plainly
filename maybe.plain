@@ -1,0 +1,16 @@
+note numbers that might not be numbers
+let first be parsed number of the words 42 end words
+let second be parsed number of the words hello end words
+say the words with a default end words
+let safe be second or else 0
+say safe
+if first has a value as found then
+say the words I found end words followed by found plus 1
+otherwise
+say the words nothing there end words
+end if
+if second has a value as other then
+say other
+otherwise
+say the words second is not a number end words
+end if

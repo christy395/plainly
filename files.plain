@@ -1,0 +1,6 @@
+note permissions are declared up front
+allow reading the file prices.txt
+allow writing the file report.txt
+let prices be the numbers in the file prices.txt
+say the words Biggest price is end words followed by largest of prices
+write the words Biggest price is end words followed by largest of prices to the file report.txt

@@ -1,0 +1,9 @@
+note let gives a name to a value. A name can be several words.
+let my name be the words Sam
+let my age be 12
+note followed by joins things together with a space.
+say my name followed by the words is followed by my age
+note set changes a value. add and subtract change numbers.
+set my age to 13
+add 1 to my age
+say the words Next year Sam is followed by my age
