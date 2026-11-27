@@ -49,6 +49,7 @@ python audit_tests.py
 python core_tests.py
 python core_bytecode_tests.py
 python core_fuzz_tests.py
+python core_bytecode_cli_tests.py
 ~~~
 
 The seeded fuzz tests are regression tests, not a substitute for long-running coverage-guided fuzzing, external penetration testing, or an independent security review.
