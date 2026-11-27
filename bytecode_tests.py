@@ -120,6 +120,18 @@ class BytecodeTests(unittest.TestCase):
         with self.assertRaisesRegex(bc.BytecodeError, "instruction limit"):
             bc.run_bytes(blob, step_limit=25)
 
+    def test_fizz_example_matches_interpreter(self):
+        path = os.path.join(os.path.dirname(__file__), "fizz.plain")
+        with open(path, "r", encoding="utf-8") as handle:
+            source = handle.read()
+        expected = io.StringIO()
+        with contextlib.redirect_stdout(expected):
+            plainly.run_source(source, path)
+        actual = io.StringIO()
+        with contextlib.redirect_stdout(actual):
+            bc.run_bytes(bc.compile_source(source))
+        self.assertEqual(actual.getvalue(), expected.getvalue())
+
     def test_repository_hello_bytecode_sample(self):
         path = os.path.join(os.path.dirname(__file__), "hello.pbc")
         with open(path, "rb") as handle:
