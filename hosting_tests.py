@@ -72,15 +72,24 @@ class HostingTests(unittest.TestCase):
             cwd=self.directory, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         self.processes.append(process)
         deadline = time.time() + 5
-        status = 0
+        status, body = 0, ""
         while time.time() < deadline:
             if process.poll() is not None:
-                break
-            status, body = request(port, "/healthz", "example.test")
-            if status == 200:
-                break
+                stdout, stderr = process.communicate(timeout=2)
+                self.fail("Plainly website process exited before becoming ready. stdout=%r stderr=%r" %
+                          (stdout, stderr))
+            try:
+                status, body = request(port, "/healthz", "example.test")
+                if status == 200:
+                    break
+            except Exception as exc:
+                # Connection refused is expected briefly while the HTTP
+                # listener is starting; any other error is retried until
+                # the deadline so the failure below remains deterministic.
+                last_error = exc
             time.sleep(0.05)
-        self.assertEqual((status, body), (200, "ok"))
+        self.assertEqual((status, body), (200, "ok"),
+                         "website did not become ready; last error: %r" % locals().get("last_error"))
         self.assertEqual(request(port, "/", "example.test"), (200, "Hosted with Plainly"))
         self.assertEqual(request(port, "/", "attacker.test")[0], 403)
 
