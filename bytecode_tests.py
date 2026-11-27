@@ -13,7 +13,7 @@ import plainly_bytecode as bc
 class BytecodeTests(unittest.TestCase):
     def run_plain(self, source, **kwargs):
         blob = bc.compile_source(source)
-        self.assertTrue(blob.startswith(b"PLNYBC\\r\\n"))
+        self.assertTrue(blob.startswith(bc.MAGIC))
         decoded = bc.loads(blob)
         output = io.StringIO()
         with contextlib.redirect_stdout(output):
