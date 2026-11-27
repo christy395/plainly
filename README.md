@@ -67,7 +67,7 @@ The existing full-featured interpreter and browser editor do not support exactly
 
 Plainly 1.5.0 starts a separate implementation of the language from its foundations. The independent core includes its own tokenizer, parser, abstract syntax tree, and interpreter. Programs executed by this core are not translated into Python, JavaScript, or C.
 
-This first preview supports variables, numbers, text, yes/no values, lists, arithmetic, comparisons, boolean logic, conditions, while loops, repeat loops, and a small set of built-in functions. It includes explicit limits for source size, token count, nesting, text, collections, numeric magnitude, and execution steps.
+This first preview supports variables, numbers, text, yes/no values, lists, arithmetic, comparisons, boolean logic, conditions, while loops, repeat loops, and a small set of built-in functions. It includes explicit limits for source size, token count, nesting, variables, aggregate runtime values, text, collections, numeric magnitude, execution steps, and cumulative output. Source files are opened with bounded descriptor-based checks and no-follow behavior where supported. These are defense-in-depth controls, not a secure sandbox.
 
 Try it:
 
@@ -689,7 +689,7 @@ This release does not include Rust or Go compiler backends. The existing native 
 - [x] Discord Gateway heartbeat scheduling, acknowledgement checks, reconnect handling, and safe mention defaults.
 - [x] Cross-platform app/game project manifest, secure-default capability policy, scaffolding, and validation for five target families.
 
-### Planned work
+### Security hardening completed in 1.5.0\n\n- [x] Validate execution budgets and enforce a hard upper bound on core interpreter steps.\n- [x] Cap declared variables, aggregate runtime values, retained text, collection sizes, and cumulative output.\n- [x] Use bounded descriptor-based source reads, regular-file checks, strict UTF-8 decoding, and no-follow opens where supported.\n- [ ] Add a separately maintained threat model, fuzzing corpus, property-based parser tests, and independent security review.\n\n### Planned work
 
 - [ ] Build a compiler and versioned Plainly-owned bytecode format directly from the independent AST; remove Python AST and generated-Python dependencies from the primary execution path.
 - [ ] Add static type checking, functions, records, modules, packages, error handling, and a versioned standard library to the independent core.
