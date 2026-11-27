@@ -592,6 +592,15 @@ The VM limits execution to 1,000,000 instructions per run and limits nested func
 
 The `native` command compiles a supported subset of Plainly into C source, then invokes a system C compiler to create a native executable:
 
+On Windows PowerShell:
+
+```powershell
+python plainly.py native speed.plain
+.\\speed.exe
+```
+
+On macOS or Linux:
+
 ```sh
 python3 plainly.py native speed.plain
 ./speed
