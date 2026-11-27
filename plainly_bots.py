@@ -110,7 +110,7 @@ def _discord_request(api, token, channel_id, text):
         raise BotRuntimeError("Discord supplied an invalid channel identifier")
     _json_request(
         "%s/channels/%s/messages" % (api.rstrip("/"), channel_id),
-        {"content": str(text)},
+        {"content": str(text), "allowed_mentions": {"parse": []}},
         headers={"Authorization": "Bot " + token,
                  "User-Agent": "DiscordBot (https://github.com/christy395/plainly, 1.3.0)"},
     )
@@ -129,9 +129,15 @@ def _discord_session(token, handler, api, gateway):
             hello = json.loads(ws.recv(timeout=20))
         except (ValueError, TimeoutError):
             raise BotRuntimeError("Discord did not send a valid gateway greeting") from None
-        if hello.get("op") != 10 or not isinstance(hello.get("d"), dict):
+        if not isinstance(hello, dict) or hello.get("op") != 10 or not isinstance(hello.get("d"), dict):
             raise BotRuntimeError("Discord sent an unexpected gateway greeting")
-        heartbeat_interval = max(1.0, float(hello["d"].get("heartbeat_interval", 45000)) / 1000.0)
+        try:
+            heartbeat_interval = float(hello["d"].get("heartbeat_interval", 45000)) / 1000.0
+        except (TypeError, ValueError):
+            raise BotRuntimeError("Discord sent an invalid heartbeat interval") from None
+        if not 0.1 <= heartbeat_interval <= 300:
+            raise BotRuntimeError("Discord sent an invalid heartbeat interval")
+
         sequence = None
         # GUILDS is deliberately not requested. Message and content intents
         # are enough for the message event used by this first integration.
@@ -141,33 +147,53 @@ def _discord_session(token, handler, api, gateway):
             "intents": intents,
             "properties": {"os": "plainly", "browser": "plainly", "device": "plainly"},
         }}))
-        ws.send(json.dumps({"op": 1, "d": sequence}))
-        next_heartbeat = time.monotonic() + heartbeat_interval
+
+        # Discord requires the first heartbeat at a random point within the
+        # interval. Every later heartbeat must be acknowledged before the next.
+        next_heartbeat = time.monotonic() + heartbeat_interval * __import__("random").random()
+        heartbeat_acknowledged = True
         self_user_id = None
         while True:
+            now = time.monotonic()
+            if now >= next_heartbeat:
+                if not heartbeat_acknowledged:
+                    raise RuntimeError("Discord heartbeat was not acknowledged")
+                ws.send(json.dumps({"op": 1, "d": sequence}))
+                heartbeat_acknowledged = False
+                next_heartbeat = time.monotonic() + heartbeat_interval
+
             timeout = max(0.1, min(heartbeat_interval, next_heartbeat - time.monotonic()))
             try:
                 raw = ws.recv(timeout=timeout)
             except TimeoutError:
-                raw = None
-            if raw is None:
-                if time.monotonic() >= next_heartbeat:
-                    ws.send(json.dumps({"op": 1, "d": sequence}))
-                    next_heartbeat = time.monotonic() + heartbeat_interval
                 continue
             try:
                 packet = json.loads(raw)
             except (TypeError, ValueError):
                 continue
+            if not isinstance(packet, dict):
+                continue
+
             op = packet.get("op")
+            if op == 11:
+                heartbeat_acknowledged = True
+                continue
             if op == 1:
+                if not heartbeat_acknowledged:
+                    raise RuntimeError("Discord requested a heartbeat before acknowledging the previous one")
                 ws.send(json.dumps({"op": 1, "d": sequence}))
+                heartbeat_acknowledged = False
                 next_heartbeat = time.monotonic() + heartbeat_interval
                 continue
+            if op in (7, 9):
+                # Reconnect or invalid-session: close this connection and let
+                # the outer loop establish a fresh Identify session.
+                raise RuntimeError("Discord requested a gateway reconnect")
             if op == 0 and packet.get("s") is not None:
                 sequence = packet["s"]
             if op != 0:
                 continue
+
             event_name = packet.get("t")
             data = packet.get("d")
             if event_name == "READY" and isinstance(data, dict):
@@ -199,7 +225,6 @@ def _discord_session(token, handler, api, gateway):
                 _discord_request(api, token, destination, value)
 
             handler(event, reply)
-
 
 def run_discord_bot(token, handler, stop_event=None):
     """Connect to the Discord Gateway and handle message-create events."""
