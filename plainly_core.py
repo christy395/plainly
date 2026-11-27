@@ -5,6 +5,7 @@ This module deliberately does not generate or execute Python, JavaScript, or C.
 It tokenizes Plainly source, parses it into a Plainly AST, and interprets that AST.
 The first core release is intentionally small; see LANGUAGE_SPEC.md.
 """
+import json
 import math
 import re
 from dataclasses import dataclass
@@ -26,7 +27,6 @@ _TOKEN = re.compile(
     r'|(?P<identifier>[A-Za-z_][A-Za-z0-9_]*)'
     r'|(?P<operator>==|!=|<=|>=|\*\*|//|[()+\-*/%<>=,\[\]]))'
 )
-_NUMBER = re.compile(r'^(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)$')
 
 
 class PlainlyCoreError(Exception):
@@ -117,8 +117,8 @@ def tokenize(source):
             value = match.group(kind)
             if kind == "string":
                 try:
-                    decoded = bytes(value[1:-1], "utf-8").decode("unicode_escape")
-                except (UnicodeDecodeError, ValueError):
+                    decoded = json.loads(value)
+                except (ValueError, TypeError):
                     raise PlainlyCoreError("invalid string escape", line_no)
                 if len(decoded) > MAX_TEXT_LENGTH:
                     raise PlainlyCoreError("text value is too large", line_no)
@@ -207,6 +207,8 @@ class ExpressionParser:
             raise PlainlyCoreError("expected an expression")
         word = token.value.lower()
         if token.kind == "number":
+            if len(token.value) > 128:
+                raise PlainlyCoreError("number literal is too long", token.line)
             value = float(token.value) if "." in token.value else int(token.value)
             left = Expr("literal", value, (), token.line)
         elif token.kind == "string":
@@ -214,7 +216,7 @@ class ExpressionParser:
         elif token.kind == "identifier" and word in ("yes", "true", "no", "false"):
             left = Expr("literal", word in ("yes", "true"), (), token.line)
         elif token.kind == "identifier" and word == "not":
-            child = self.expression(7, depth + 1)
+            child = self.expression(3, depth + 1)
             left = Expr("unary", "not", (child,), token.line)
         elif token.value == "-":
             child = self.expression(7, depth + 1)
@@ -398,7 +400,11 @@ class Interpreter:
     def checked_number(self, value, line):
         if not _is_number(value):
             raise PlainlyCoreError("this operation needs numbers", line)
-        if not math.isfinite(float(value)) or abs(value) > MAX_NUMBER_MAGNITUDE:
+        try:
+            finite = math.isfinite(float(value))
+        except (OverflowError, ValueError):
+            finite = False
+        if not finite or abs(value) > MAX_NUMBER_MAGNITUDE:
             raise PlainlyCoreError("number is outside the supported range", line)
         return value
 
