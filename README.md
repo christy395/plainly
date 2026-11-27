@@ -14,7 +14,7 @@ say the words You are not a teenager
 end if
 ```
 
-<sub>Current version: **1.1.1** · License: MIT · Status: early public release, preparing for independent security review</sub>
+<sub>Current version: **1.3.0** · License: MIT · Status: early public release, preparing for independent security review</sub>
 
 > **Security notice:** Plainly is a programming language and runtime, not a secure sandbox. Do not run programs from untrusted people on a machine or account that contains secrets or important data. Read [SECURITY.md](SECURITY.md) before hosting programs for other users. This project has not been independently audited.
 
@@ -29,6 +29,8 @@ end if
 - [Files and permissions](#files-and-permissions)
 - [Remembering data](#remembering-data)
 - [Building websites](#building-websites)
+- [Discord and Telegram bots](#discord-and-telegram-bots)
+- [Hosting provider integration](#hosting-provider-integration)
 - [Browser editor](#browser-editor)
 - [Native executable and machine code](#native-executable-and-machine-code)
 - [Commands](#commands)
@@ -36,11 +38,12 @@ end if
 - [Tests and audit preparation](#tests-and-audit-preparation)
 - [Rust and Go status](#rust-and-go-status)
 - [Known limitations](#known-limitations)
+- [Roadmap](#roadmap)
 - [Contributing](#contributing)
 
 ## What Plainly can do
 
-Plainly 1.1.1 currently includes:
+Plainly 1.3.0 currently includes:
 
 - English-like statements, variables, calculations, comparisons, and yes/no logic.
 - Lists, records, user-defined functions, loops, and conditional blocks.
@@ -48,7 +51,9 @@ Plainly 1.1.1 currently includes:
 - Friendly diagnostics that identify the line with a problem.
 - A repair command for common syntax mistakes. It writes a separate fixed file and never adds file permissions automatically.
 - Explicit file permissions and a small persistent memory feature.
-- A local Python web server with simple pages, input boxes, buttons, and request handlers.
+- A small Python web server with routes, pages, input boxes, buttons, and provider-configurable host/port settings.
+- Basic text-message integrations for Discord and Telegram bots in the Python runtime.
+- A provider process adapter for starting, stopping, checking, and reading logs from individual Plainly app processes.
 - A browser editor that runs its supported language subset without installing Python.
 - A native compilation path for a restricted subset of the language.
 
@@ -377,7 +382,7 @@ Supported saved values include numbers, text, yes/no values, and lists of those 
 
 ## Building websites
 
-The Python runtime can serve a small local website. This server is intended for development and local testing. It binds to `127.0.0.1` and is not a public production web server.
+The Python runtime includes a small HTTP server. By default it binds to `127.0.0.1` for local development. Hosting providers can explicitly configure its bind address, port, and accepted Host names. The server remains a lightweight feature rather than a full production web framework.
 
 Example `site.plain`:
 
@@ -402,7 +407,80 @@ Run it:
 python3 plainly.py run site.plain
 ```
 
-Open `http://127.0.0.1:8099` on the same machine. The server feature is deliberately limited. Do not expose it to the public internet without a separate security design and review.
+Open `http://127.0.0.1:8099` on the same machine. For a provider deployment, use the assigned port and a strict hostname allowlist:
+
+```sh
+python3 plainly.py run site.plain --host 0.0.0.0 --port 8080 --allow-host site.example.com
+```
+
+The same settings can be supplied with `PORT`, `PLAINLY_HOST`, and comma-separated `PLAINLY_ALLOWED_HOSTS` environment variables. Public deployments should sit behind a provider-managed HTTPS reverse proxy. The server exposes `/healthz` for basic health checks. See [HOSTING.md](HOSTING.md) for provider setup and security requirements.
+
+## Discord and Telegram bots
+
+The Python interpreter includes first-version, text-based bot integrations. They let a Plainly program respond to incoming messages and send a text reply. Install the optional dependency for Discord:
+
+```sh
+python3 -m pip install ".[bots]"
+```
+
+Telegram uses Bot API long polling and does not require the optional WebSocket package. Discord uses the Gateway WebSocket and requires the Message Content Intent to be enabled for the bot application.
+
+A Telegram example:
+
+```plain
+allow running a Telegram bot
+when a Telegram message arrives do
+let said be the message text
+if said contains the words hello end words then
+reply with the words Hello followed by the message author
+otherwise
+reply with the words You said followed by said
+end if
+end when
+start the Telegram bot
+```
+
+A Discord example:
+
+```plain
+allow running a Discord bot
+when a Discord message arrives do
+let said be the message text
+if said contains the words hello end words then
+reply with the words Hello followed by the message author
+end if
+end when
+start the Discord bot
+```
+
+Store tokens in environment secrets, never in source code:
+
+- Telegram: `PLAINLY_SECRET_TELEGRAM_TOKEN`
+- Discord: `PLAINLY_SECRET_DISCORD_TOKEN`
+
+The current integrations handle ordinary text messages and text replies. They do not yet implement slash commands, interactions, reactions, attachments, voice, or Telegram webhooks. Read [HOSTING.md](HOSTING.md) before deploying bots.
+
+## Hosting provider integration
+
+The `plainly_host.py` module provides a Python process adapter for a provider to integrate into its own dashboard and control plane:
+
+```python
+from plainly_host import PlainlyHost
+
+runtime = PlainlyHost()
+runtime.start(
+    app_id="customer-app-123",
+    program="main.plain",
+    workdir="/srv/plainly/apps/customer-app-123",
+    env={"PORT": "8080", "PLAINLY_HOST": "0.0.0.0",
+         "PLAINLY_ALLOWED_HOSTS": "site.example.com"},
+)
+print(runtime.status("customer-app-123"))
+print(runtime.logs("customer-app-123"))
+runtime.stop("customer-app-123")
+```
+
+The adapter manages child processes; it does not supply customer accounts, billing, persistent job records, automatic recovery, resource quotas, or OS/container isolation. A provider must build those services around it. **Do not run untrusted customer programs without external container or VM isolation.** See [HOSTING.md](HOSTING.md) and [SECURITY.md](SECURITY.md).
 
 ## Browser editor
 
@@ -460,15 +538,12 @@ python3 plainly.py native speed.plain
 The native output is a platform-specific executable containing machine code. Plainly does not ask you to write raw binary instructions. It translates the Plainly program into C and lets GCC, Clang, or another compatible C compiler generate the executable.
 
 The native backend currently supports numbers, text, yes/no values, number lists, functions, and control-flow statements. It does not currently support file access, records, maybe values, or the web-server feature. The native output must be treated as executable code and run only with the same isolation precautions as any other program.
-
-
-**Binary bytecode status:** this repository version does not yet provide a `.pbc` bytecode format or a binary virtual machine. The existing `native` command produces a platform-specific executable through generated C. Do not use `.pbc` commands or expect binary bytecode support in this version.
-
+\n
 ## Commands
 
 | Command | Purpose |
 |---|---|
-| `plainly run FILE` | Check and run a Plainly program |
+| `plainly run FILE [--host ADDRESS] [--port PORT] [--allow-host DOMAIN]` | Check and run a program; optional website hosting settings |
 | `plainly check FILE` | Check the program without running it |
 | `plainly fix FILE` | Write a separate repaired file when common mistakes can be fixed |
 | `plainly build FILE` | Print the generated Python |
@@ -492,19 +567,25 @@ The example files are currently in the repository root:
 | `maybe.plain` | Maybe values and safe conversion |
 | `files.plain` | Explicit file permissions |
 | `counter.plain` | Local website and persistent memory |
-| `site.plain` | Local website with two routes |
+| `site.plain` | Website with two routes |
 | `app.plain` | Page inputs and a server response |
+| `telegram_bot.plain` | Telegram text-message bot example |
+| `discord_bot.plain` | Discord text-message bot example |
 | `speed.plain` | Native compilation example |
 
-The files `discord_bot.plain` and `telegram_bot.plain` are retained as experimental drafts only. The current interpreter does not implement their bot statements; they are not working integrations and are not supported examples.
+The bot examples use the first-version text-message integrations described above. They require the corresponding environment secret; Discord also requires the optional bot dependency and enabled Message Content Intent.
 
 ## Tests and audit preparation
 
 Run these checks from the repository root:
 
 ```sh
-python3 -m py_compile plainly.py
+python3 -m pip install ".[bots]"
+python3 -m py_compile plainly.py plainly_bytecode.py plainly_bots.py plainly_host.py
 python3 audit_tests.py
+python3 bytecode_tests.py
+python3 bot_tests.py
+python3 hosting_tests.py
 node web_test.js
 python3 plainly.py check hello.plain
 python3 plainly.py run hello.plain
@@ -517,9 +598,9 @@ python3 plainly.py native speed.plain
 ./speed
 ```
 
-GitHub Actions runs the focused Python, browser, and native regression checks on pushes and pull requests. A passing CI run demonstrates only that these automated checks passed. **It does not mean the project passed a security audit.**
+GitHub Actions runs the Python interpreter, bytecode, bot-mock, hosting adapter, browser, and native regression checks on pushes and pull requests. Bot integration tests use local mocks; they do not need real platform tokens. A passing CI run demonstrates only that these automated checks passed. **It does not mean the project passed a security audit.**
 
-For audit scope, known limitations, safe deployment requirements, and vulnerability reporting, see [SECURITY.md](SECURITY.md).
+For provider deployment, see [HOSTING.md](HOSTING.md). For audit scope, known limitations, safe deployment requirements, and vulnerability reporting, see [SECURITY.md](SECURITY.md).
 
 ## Rust and Go status
 
@@ -527,14 +608,35 @@ This release does not include Rust or Go compiler backends. The existing native 
 
 ## Known limitations
 
-- Plainly is an early public release and has not received an independent security audit.
-- The interpreter executes compiler-generated Python. The restricted built-ins are not a security sandbox.
-- Runtime permissions, memory selection, and routes are module-level state. Do not run independent tenants concurrently inside one interpreter process.
-- Plainly does not impose general CPU, memory, process-count, or wall-clock limits. Enforce them outside the interpreter.
-- The local web server is not designed as a public multi-tenant server.
-- The native compiler supports only a subset of the language and produces an executable that has the privileges of the account running it.
+- Plainly has not received an independent security audit and is not a secure sandbox.
+- The interpreter executes compiler-generated Python with the permissions of its operating-system process.
+- File permissions, memory selection, bot handlers, and website routes are process-level runtime state. Run each tenant in a separate process and private workspace.
+- Plainly does not impose general CPU, memory, process-count, disk, network, or wall-clock quotas. Hosting providers must enforce these outside the runtime.
+- The built-in web server is small and should sit behind a managed HTTPS reverse proxy. It is not a full production web framework or a multi-tenant application server.
+- Discord and Telegram integrations currently support simple text-message handling and text replies only. They do not yet cover slash commands, interactions, reactions, attachments, voice, or Telegram webhooks.
+- Bytecode v1 is a compute-only subset; it does not support files, memory, websites, or bots.
+- The provider process adapter has an in-memory registry and does not implement persistent job recovery, customer authentication, billing, or OS isolation.
+- The native compiler supports only a subset of the language and produces an executable with the privileges of the account running it.
 - The browser editor and Python runtime support different language subsets.
-- Discord and Telegram bot integration is not implemented.
+
+## Roadmap
+
+### Available in 1.3.0
+
+- [x] Versioned binary .pbc format and a dedicated bytecode VM for the supported compute subset.
+- [x] Provider-controlled host, port, and Host-header allowlist for the small website server.
+- [x] Basic Discord and Telegram text-message bot integrations.
+- [x] A Python process adapter for provider-managed app lifecycle and logs.
+- [x] Local mock-based integration tests for bot and hosting behavior.
+
+### Planned work
+
+- [ ] Production-grade container or VM isolation examples and provider-specific resource controls.
+- [ ] Durable job recovery, health monitoring, metrics, quotas, and automatic restarts in a provider control plane.
+- [ ] More complete bot features, including Discord interactions and Telegram webhook support.
+- [ ] A more capable public web runtime with stronger request controls and application lifecycle hooks.
+
+The planned items are not implemented features. Update this section whenever runtime capabilities change.
 
 ## Contributing
 
