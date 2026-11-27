@@ -1,0 +1,8 @@
+# A first program for the independent Plainly core
+let score be 10
+set score to score plus 5
+if score is at least 15 then
+say "Plainly Core is running"
+otherwise
+say "Something went wrong"
+end if
