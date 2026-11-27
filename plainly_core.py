@@ -21,6 +21,8 @@ MAX_REPEAT = 100000
 MAX_COLLECTION_ITEMS = 10000
 MAX_TEXT_LENGTH = 1024 * 1024
 MAX_OUTPUT_BYTES = 1024 * 1024
+MAX_VARIABLES = 10000
+MAX_RUNTIME_VALUES = 100000
 MAX_NUMBER_MAGNITUDE = 1e100
 
 _TOKEN = re.compile(
@@ -401,6 +403,8 @@ def _is_number(value):
 
 class Interpreter:
     def __init__(self, output=None, max_steps=MAX_STEPS):
+        if isinstance(max_steps, bool) or not isinstance(max_steps, int) or not 1 <= max_steps <= MAX_STEPS:
+            raise PlainlyCoreError("execution budget must be an integer from 1 to %d" % MAX_STEPS)
         self.variables = {}
         self.output = output if output is not None else []
         self.output_bytes = 0
@@ -421,6 +425,31 @@ class Interpreter:
         if not finite or abs(value) > MAX_NUMBER_MAGNITUDE:
             raise PlainlyCoreError("number is outside the supported range", line)
         return value
+
+    def store_value(self, name, value, line, is_new):
+        if is_new and len(self.variables) >= MAX_VARIABLES:
+            raise PlainlyCoreError("program declares too many variables", line)
+        pending = [value] + [v for key, v in self.variables.items() if key != name]
+        total = 0
+        text_bytes = 0
+        while pending:
+            current = pending.pop()
+            total += 1
+            if total > MAX_RUNTIME_VALUES:
+                raise PlainlyCoreError("runtime value limit exceeded", line)
+            if isinstance(current, str):
+                text_bytes += len(current.encode("utf-8"))
+                if text_bytes > MAX_TEXT_LENGTH:
+                    raise PlainlyCoreError("combined runtime text limit exceeded", line)
+            elif isinstance(current, list):
+                if len(current) > MAX_COLLECTION_ITEMS:
+                    raise PlainlyCoreError("list contains too many items", line)
+                pending.extend(current)
+            elif _is_number(current):
+                self.checked_number(current, line)
+            elif not isinstance(current, bool):
+                raise PlainlyCoreError("unsupported runtime value", line)
+        self.variables[name] = value
 
     def evaluate(self, expr):
         self.tick(expr.line)
@@ -527,11 +556,13 @@ class Interpreter:
             if kind == "let":
                 if statement.value in self.variables:
                     raise PlainlyCoreError("name %r has already been declared" % statement.value, statement.line)
-                self.variables[statement.value] = self.evaluate(statement.expression)
+                value = self.evaluate(statement.expression)
+                self.store_value(statement.value, value, statement.line, True)
             elif kind == "set":
                 if statement.value not in self.variables:
                     raise PlainlyCoreError("cannot set unknown name %r" % statement.value, statement.line)
-                self.variables[statement.value] = self.evaluate(statement.expression)
+                value = self.evaluate(statement.expression)
+                self.store_value(statement.value, value, statement.line, False)
             elif kind == "say":
                 value = _show(self.evaluate(statement.expression))
                 output_size = len(value.encode("utf-8")) + 1
@@ -561,6 +592,8 @@ def check_source(source):
 
 
 def run_source(source, max_steps=MAX_STEPS):
+    if isinstance(max_steps, bool) or not isinstance(max_steps, int) or not 1 <= max_steps <= MAX_STEPS:
+        raise PlainlyCoreError("execution budget must be an integer from 1 to %d" % MAX_STEPS)
     program = parse(source)
     output = []
     Interpreter(output=output, max_steps=max_steps).execute_block(program.statements)
