@@ -23,6 +23,7 @@
 
 ## Unreleased
 
+- Pin the separate cross-platform CI workflow to Ubuntu 24.04, Windows Server 2022, and macOS 15 so runner-image changes do not silently break Python compatibility jobs.
 - Avoid reverse-DNS lookups during HTTP server startup; the listener now uses its numeric bound address for server metadata, preventing macOS startup hangs without requiring DNS.
 - Make Discord bot shutdown responsive to provider stop events instead of waiting for a full Gateway heartbeat interval.
 - Validate hosting process stop timeouts and reject booleans, non-finite values, strings, negative values, and excessive waits.
