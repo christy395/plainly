@@ -31,11 +31,13 @@ jobs:
       - name: Install optional bot runtime
         run: python -m pip install "websockets>=12,<14"
       - name: Compile interpreter, bytecode, bot and host modules
-        run: python -m py_compile plainly.py plainly_bytecode.py plainly_bots.py plainly_host.py plainly_project.py plainly_core.py
+        run: python -m py_compile plainly.py plainly_bytecode.py plainly_bots.py plainly_host.py plainly_project.py plainly_core.py plainly_core_bytecode.py
       - name: Run audit regression tests
         run: python audit_tests.py
       - name: Run independent Plainly core regression tests
         run: python core_tests.py
+      - name: Run independent core bytecode regression tests
+        run: python core_bytecode_tests.py
       - name: Run project manifest security tests
         run: python project_tests.py
       - name: Run bytecode regression tests
@@ -62,6 +64,10 @@ jobs:
         run: |
           python plainly.py core-check core_hello.plain
           python plainly.py core-run core_hello.plain
+      - name: Compile and execute independent core bytecode
+        run: |
+          python plainly.py core-compile core_hello.plain
+          python plainly.py core-execute core_hello.core.pbc
       - name: Check and run the compatibility example
         run: |
           python plainly.py check hello.plain
