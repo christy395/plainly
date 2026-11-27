@@ -712,7 +712,7 @@ This release does not include Rust or Go compiler backends. The existing native 
 - [x] Discord Gateway heartbeat scheduling, acknowledgement checks, reconnect handling, and safe mention defaults.
 - [x] Responsive browser editor viewport support for mobile browsers and graceful local-storage failure handling.
 - [x] Cross-platform app/game project manifest, secure-default capability policy, scaffolding, and validation for five target families.
-- [x] Automated interpreter regression coverage on Windows, macOS, and Linux, with matching browser and native-build checks.
+- [x] GitHub Actions matrix for Python regression suites on Windows, macOS, and Linux, plus a separate browser-editor test job.
 - [x] Cross-platform HTTP hosting integration checks use direct loopback TCP and tolerate malformed-request logging.
 
 ### Security hardening completed in 1.5.0
@@ -720,6 +720,8 @@ This release does not include Rust or Go compiler backends. The existing native 
 - [x] Validate execution budgets and enforce a hard upper bound on core interpreter steps.
 - [x] Cap declared variables, aggregate runtime values, retained text, collection sizes, and cumulative output.
 - [x] Use bounded descriptor-based source reads, regular-file checks, strict UTF-8 decoding, and no-follow opens where supported.
+- [x] Validate file type and hard-link count before truncating a permitted file, preventing rejected hard-link writes from modifying their targets.
+- [x] Add a regression test proving a rejected hard-link write leaves the linked target unchanged.
 - [ ] Add a separately maintained threat model, fuzzing corpus, property-based parser tests, and independent security review.
 
 ### Planned work
