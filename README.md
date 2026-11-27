@@ -86,11 +86,13 @@ Check and run the included example:
 ~~~sh
 plainly core-check core_hello.plain
 plainly core-run core_hello.plain
+plainly core-compile core_hello.plain
+plainly core-execute core_hello.core.pbc
 ~~~
 
 Read the exact grammar and current limits in [LANGUAGE_SPEC.md](LANGUAGE_SPEC.md).
 
-**Important:** this is the beginning of the rebuild, not full feature parity. The older run, check, build, native, compile, and execute commands still use the 1.4 implementation. The independent core does not yet have user-defined functions, records, modules, static type declarations, a compiler, a browser target, or a production web framework. These are planned stages, not shipped features.
+**Important:** this is the beginning of the rebuild, not full feature parity. The older `run`, `check`, `build`, `native`, `compile`, and `execute` commands still use the 1.4 implementation. The independent core now has its own AST-to-bytecode compiler and bounded virtual machine through `core-compile` and `core-execute`. It does not yet have user-defined functions, records, modules, static type declarations, a browser target, or a production web framework. Those remain planned stages, not shipped features.
 
 ## Installation
 
