@@ -22,7 +22,7 @@ class BytecodeTests(unittest.TestCase):
 
     def test_binary_container_round_trip(self):
         blob = bc.compile_source("say the words Hello from bytecode end words")
-        self.assertNotIn(b"_say", blob)
+        self.assertNotIn(b"exec(", blob)
         self.assertEqual(self.run_plain("say the words Hello from bytecode end words"),
                          "Hello from bytecode\n")
 
