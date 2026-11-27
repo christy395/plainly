@@ -65,6 +65,16 @@ class PlainlyCoreTests(unittest.TestCase):
         with self.assertRaisesRegex(core.PlainlyCoreError, "repeat needs"):
             core.run_source("repeat 100001 times do\nsay \"x\"\nend repeat\n")
 
+    def test_empty_repeat_still_spends_execution_budget(self):
+        with self.assertRaisesRegex(core.PlainlyCoreError, "step limit"):
+            core.run_source("repeat 100000 times do\nend repeat\n", max_steps=30)
+
+    def test_cumulative_output_limit_is_enforced(self):
+        payload = "a" * 700000
+        source = 'let big be "' + payload + '"\nsay big\nsay big\n'
+        with self.assertRaisesRegex(core.PlainlyCoreError, "output exceeded"):
+            core.run_source(source)
+
     def test_text_limit_is_enforced(self):
         huge = "a" * (core.MAX_TEXT_LENGTH + 1)
         source = 'say "' + huge + '"\n'
