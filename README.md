@@ -660,6 +660,8 @@ python3 -m pip install ".[bots]"
 python3 -m py_compile plainly.py plainly_bytecode.py plainly_bots.py plainly_host.py plainly_project.py plainly_core.py plainly_core_bytecode.py
 python3 core_tests.py
 python3 core_bytecode_tests.py
+python3 core_fuzz_tests.py
+python3 core_bytecode_cli_tests.py
 python3 audit_tests.py
 python3 bytecode_tests.py
 python3 plainly.py core-check core_hello.plain
