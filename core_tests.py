@@ -1,3 +1,5 @@
+import os
+import tempfile
 import unittest
 
 import plainly_core as core
@@ -126,6 +128,38 @@ class PlainlyCoreTests(unittest.TestCase):
     def test_unknown_function_is_reported(self):
         with self.assertRaisesRegex(core.PlainlyCoreError, "unknown function"):
             core.run_source("say do_something(1)\n")
+
+    def test_execution_budget_rejects_invalid_values(self):
+        for budget in (0, -1, True, 1.5, core.MAX_STEPS + 1):
+            with self.subTest(budget=budget):
+                with self.assertRaisesRegex(core.PlainlyCoreError, "execution budget"):
+                    core.run_source("say 1\n", max_steps=budget)
+
+    def test_combined_runtime_text_limit(self):
+        source = 'let first be "' + ("a" * 600000) + '"\nlet second be "' + ("b" * 600000) + '"\n'
+        with self.assertRaisesRegex(core.PlainlyCoreError, "combined runtime text limit"):
+            core.run_source(source)
+
+    def test_source_loader_rejects_symlink(self):
+        if not hasattr(os, "symlink") or not hasattr(os, "O_NOFOLLOW"):
+            self.skipTest("platform does not expose no-follow file opens")
+        with tempfile.TemporaryDirectory() as folder:
+            target = os.path.join(folder, "target.plain")
+            link = os.path.join(folder, "link.plain")
+            with open(target, "w", encoding="utf-8") as handle:
+                handle.write("say 1\n")
+            os.symlink(target, link)
+            with self.assertRaises(core.PlainlyCoreError):
+                core.read_source_file(link)
+
+    def test_source_loader_rejects_invalid_utf8(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = os.path.join(folder, "invalid.plain")
+            with open(path, "wb") as handle:
+                handle.write(b"say \xff\n")
+            with self.assertRaisesRegex(core.PlainlyCoreError, "valid UTF-8"):
+                core.read_source_file(path)
+
 
 
 if __name__ == "__main__":
