@@ -117,6 +117,8 @@ def _discord_request(api, token, channel_id, text):
 
 
 def _discord_session(token, handler, api, gateway, stop_event=None):
+    if stop_event is not None and stop_event.is_set():
+        return
     try:
         from websockets.sync.client import connect
     except ImportError:
