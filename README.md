@@ -1,405 +1,429 @@
 # Plainly
 
-A programming language written in plain English. No symbols, no brackets, no quote marks, no indentation rules. Programs read like instructions, and the compiler checks them before anything runs.
+**A programming language written in plain English.**
 
-**Version 1.1.0.** Free to use. See `LICENSE`.
+Plainly lets you write programs as instructions instead of traditional punctuation-heavy code. Its source files use the `.plain` extension.
 
-> **Status: first public release.** It is tested (see Testing below) but young, and it has not been security audited. Please do not rely on it for anything where safety matters.
+```plain
+let age be 15
 
-```
-define total price of items as a list of item giving a number
-let sum be 0
-for each item in items do
-add price of item times quantity of item to sum
-end for
-give back sum
-end define
+if age is at least 13 then
+say the words You are a teenager
+otherwise
+say the words You are not a teenager
+end if
 ```
 
-## What it can do
+<sub>Current version: **1.1.1** · License: MIT · Status: early public release, preparing for independent security review</sub>
 
-- **Read like English.** Sentences such as `let total be 0`, `say the words Hello end words`, and `for each score in scores do`. Names can be several words, like `total price`.
-- **Catch mistakes before running.** It checks types, so adding text to a number or promising a value a function never gives back is an error with a plain explanation.
-- **Have no null.** A value that might be missing is a `maybe`, and you must handle both cases.
-- **Control file access.** A program cannot read or write a file until it says `allow reading the file NAME` or `allow writing the file NAME`.
-- **Run two ways.** `run` uses the full language. `native` compiles to a fast machine-code program through a C compiler.
-- **Give friendly errors.** Messages name the line, show it, and suggest fixes such as "did you mean ...?".
+> **Security notice:** Plainly is a programming language and runtime, not a secure sandbox. Do not run programs from untrusted people on a machine or account that contains secrets or important data. Read [SECURITY.md](SECURITY.md) before hosting programs for other users. This project has not been independently audited.
 
-## Install
+---
 
-**Option 1: no Python needed.** Download the app for your system from the Releases page (Windows, Mac or Linux), then:
+## Contents
 
-```
-plainly-Linux run hello.plain
-```
+- [What Plainly can do](#what-plainly-can-do)
+- [Quick start](#quick-start)
+- [Your first program](#your-first-program)
+- [Language guide](#language-guide)
+- [Files and permissions](#files-and-permissions)
+- [Remembering data](#remembering-data)
+- [Building websites](#building-websites)
+- [Browser editor](#browser-editor)
+- [Native executable and machine code](#native-executable-and-machine-code)
+- [Commands](#commands)
+- [Examples in this repository](#examples-in-this-repository)
+- [Tests and audit preparation](#tests-and-audit-preparation)
+- [Rust and Go status](#rust-and-go-status)
+- [Known limitations](#known-limitations)
+- [Contributing](#contributing)
 
-**Option 2: with pip.** If you have Python 3:
+## What Plainly can do
 
-```
-pip install plainly-lang
-plainly run hello.plain
-```
+Plainly 1.1.1 currently includes:
 
-**Option 3: just the file.** Download `plainly.py` and run `python3 plainly.py run hello.plain`.
+- English-like statements, variables, calculations, comparisons, and yes/no logic.
+- Lists, records, user-defined functions, loops, and conditional blocks.
+- Type checking before execution, including `maybe` values for values that might be missing.
+- Friendly diagnostics that identify the line with a problem.
+- A repair command for common syntax mistakes. It writes a separate fixed file and never adds file permissions automatically.
+- Explicit file permissions and a small persistent memory feature.
+- A local Python web server with simple pages, input boxes, buttons, and request handlers.
+- A browser editor that runs its supported language subset without installing Python.
+- A native compilation path for a restricted subset of the language.
 
-The `native` command also needs a C compiler (gcc, cc or clang) on your machine.
-
-## Full guide: how to use Plainly
-
-### 1. Pick how you will run it
-
-| You have | Do this |
-|---|---|
-| Nothing to install | Open the browser version (`plainly-web.html`), pick a lesson, press **Run** |
-| Python 3 | Download `plainly.py`, then `python3 plainly.py run hello.plain` (Windows: `python` or `py`) |
-| Python and pip | `pip install plainly-lang`, then `plainly run hello.plain` |
-| Phone (Android) | Install Termux, then `pkg install python`, and use the Python line above |
-| Google Colab | Upload the files, then `!python plainly.py run hello.plain` |
-
-### 2. Write your first program
-
-Make a text file called `hello.plain`:
-
-```
-note my first program
-say the words Hello, world.
-```
-
-Run it: `python3 plainly.py run hello.plain`. It prints `Hello, world.`
-
-### 3. The rules in one minute
-
-1. **One sentence per line.**
-2. **Comments:** a line starting with `note` is ignored.
-3. **Text:** write `the words` then your text. It ends at the end of the line, at `end words`, or by itself before `followed by`, `joined to`, `that asks` and `and the words`. Text can hold any symbols.
-4. **Blocks** (`if`, `while`, `repeat`, `for each`, `define`, `when`) are closed with `end` and the block name, such as `end if`.
-5. **No symbols outside text:** no `_ : " ( ) [ ] { } ;`. Say it in words instead: `plus`, `minus`, `times`, `divided by`, `modulo`, `is greater than`.
-6. **Names** can be up to 6 words, cannot start with a number, and cannot be `true` or `false`.
-7. **Inputs take one value each.** Write `let smaller be n minus 1` and then `factorial of smaller`. Writing `factorial of n minus 1` means `(factorial of n) minus 1`.
-
-### 4. Cheat sheet
-
-| To do this | Write this |
-|---|---|
-| Show something | `say the words Hi` or `say total` |
-| Make a value | `let age be 12` |
-| Change it | `set age to 13`, `add 1 to age`, `subtract 2 from age` |
-| Join text | `say the words Age is followed by age` |
-| Choose | `if age is at least 18 then` ... `otherwise` ... `end if` |
-| Repeat | `repeat 3 times do` ... `end repeat` |
-| Loop while true | `while count is less than 5 do` ... `end while` |
-| Loop over a list | `for each pet in pets do` ... `end for` |
-| Make a list | `let pets be a list of the words cat and the words dog`, `an empty list of number` |
-| Get an entry | `entry 1 of pets` (counting from 1) |
-| Own command | `define double of n as number giving number` ... `give back n times 2` ... `end define` |
-| Several inputs | `define add up of a as number with b as number giving number` and call `add up of 4 with 5` |
-| Check text | `said contains the words hello end words` |
-| Maybe a value | `parsed number of the words 42 end words`, then `has a value as x` or `or else 0` |
-
-Types are `number`, `text`, `truth` (yes or no), `a list of ...`, `maybe ...`, and your own records.
-
-### 5. Commands
-
-| Command | What it does |
-|---|---|
-| `run FILE` | Check, then run |
-| `check FILE` | Check only |
-| `fix FILE` | Repair common mistakes into `FILE.fixed.plain` (never adds permissions) |
-| `native FILE` | Compile to a fast native program (needs gcc, cc or clang) |
-| `build FILE` / `c FILE` | Show the generated Python / C |
-| `version` | Show the version |
-
-### 6. Files, memory and permissions
-
-A program must ask before it touches anything:
-
-```
-allow reading the file prices.txt
-let prices be the numbers in the file prices.txt
-allow writing the file report.txt
-write the words Done end words to the file report.txt
-allow remembering in the file memory.json
-remember total as visits
-```
-
-Only files in the program's own folder can be used. If a permission is missing, Plainly stops before running and tells you exactly what to add.
-
-### 7. Build a website (Python version)
-
-```
-when someone visits the path home do
-show a heading with the words My site
-show a box called name
-show a paragraph called answer with the words Type a name.
-show a button with the words Greet that asks the path hello and shows the reply in the paragraph called answer
-reply with the page
-end when
-when someone visits the path hello do
-reply with the words Hello followed by the visitor sent name
-end when
-start the server on port 8080
-```
-
-Run it, then open `http://127.0.0.1:8080`. The server answers only on your own computer. See `examples/app.plain`, `notes.plain` and `chatbot.plain`.
-
-### 8. Fix problems
-
-- **Plainly found a problem:** read the line it shows. In a terminal it offers to fix common ones; or run `fix FILE`.
-- **I do not know what X means:** a name is misspelled or was never created with `let`.
-- **Text swallowed the rest of the line:** close it with `end words`, especially before `then`, `to` or `contains`.
-- **Has not asked permission yet:** add the `allow ...` line it names. This is on purpose.
-- **Permission denied when running a native program:** build it in your home folder, not a download or temporary folder.
-- **Port may already be in use:** change the number in `start the server on port ...`.
-- **`python3` not found (Windows):** use `python` or `py`.
-
-## Learn it in ten minutes
-
-Start with the lessons in `examples/lessons` (lessons 1 to 6) or in the browser version (lessons 1 to 8, which also covers pages and a chatbot). Each lesson is a short program with `note` lines that explain it. Run it, change it, run it again.
-
-## Bots
-
-**What Plainly can do today:** chatbots that follow rules you write. `text contains the words hello end words` checks for words and ignores capital letters. In the browser version, Lesson 8 is a chatbot on a page. In the Python version, `examples/chatbot.plain` runs a chatbot on your own server, and a bot can remember things between visits.
-
-**What it cannot do yet:** Discord, Telegram or WhatsApp bots, or bots that visit other websites. Those need to reach other services over the internet, hold secret keys, and keep live connections. Plainly programs deliberately cannot reach the internet, so a safe design would need a new permission, such as asking to talk to one named site, plus sending and receiving data. That is not built yet.
-
-## Names and text
-
-- **Names** can use any words, even ones like `end`, `from` or `the cat`. A name can be up to 6 words, cannot start with a number, and cannot be `true` or `false`.
-- A name can match a built-in, like `length`. `length of items` still calls the built-in, and plain `length` is your value.
-- **Text** starts with `the words` and can hold any symbols, such as `Total: (5) done; ok`. It ends at the end of the line, at `end words`, or by itself before `followed by` and `joined to`.
-
-## Fixing mistakes automatically
-
-```
-python3 plainly.py fix program.plain
-```
-
-This writes `program.fixed.plain` and lists every change. Your original file is never touched. It repairs the mistakes people make most:
-
-- Habits from other languages: `print`, `var`, `else`, `elif`, `return`, `endif`, quoted text, brackets and colons.
-- Misspelled sentence starters (`sya` becomes `say`) and misspelled names (`totl` becomes `total`).
-- A missing `then` or `do`, a missing `end`, or the wrong `end` for a block.
-
-When you run a program that has a fixable problem in a terminal, Plainly offers to fix it and run it right away.
-- Using `plus` to join text, which becomes `followed by`.
-
-It never adds permissions. Whether a program may touch files or memory is your decision, so it stops and asks you instead. In the browser version, a **Fix it** button appears when a problem can be repaired.
-
-## Testing
-
-```
-python3 tests/run_tests.py
-node tests/web_test.js
-```
-
-The first checks the examples, errors, names, the fixer, memory, the server, and the generated C. The second checks the browser version.
+The Python runtime and browser editor do not support exactly the same features. See [Known limitations](#known-limitations).
 
 ## Quick start
 
-You need Python 3. The `native` command also needs a C compiler (gcc, cc or clang).
+### Requirements
 
-```
-python3 plainly.py run examples/hello.plain
-python3 plainly.py check examples/shop.plain
-python3 plainly.py native examples/speed.plain
-```
+- Python 3.8 or newer for the command-line interpreter.
+- Node.js for the browser regression test.
+- GCC, Clang, or another compatible C compiler only when using the native compilation command.
 
-| Command | What it does |
-|---|---|
-| `run FILE` | Check, then run the program |
-| `check FILE` | Check only |
-| `native FILE` | Check, then build a fast native program |
-| `build FILE` | Show the generated Python |
-| `c FILE` | Show the generated C |
+### Get the source
 
-On Windows the command is often `python` or `py`. Runs fine in Google Colab, Replit, Codespaces, PythonAnywhere and Termux.
+Clone the repository and enter its folder:
 
-## Websites: backend and frontend
-
-**Backend (Python version).** A program can run a real web server. It listens on your own computer only (127.0.0.1) until you decide otherwise.
-
-```
-when someone visits the path home do
-show a heading with the words Welcome end words
-show a paragraph with the words Built in plain English. end words
-reply with the page
-end when
-when someone visits the path hello do
-reply with the words Hello end words followed by the visitor sent name
-end when
-start the server on port 8080
+```sh
+git clone https://github.com/christy395/plainly.git
+cd plainly
 ```
 
-Run it with `python3 plainly.py run site.plain`, then open `http://127.0.0.1:8080`. Replies are plain text or a simple page, and page text is escaped so visitors cannot inject code.
+Run Plainly directly with Python:
 
-**Frontend (browser version, `plainly-web.html`).** Programs can build live pages with `show a heading`, `show a paragraph called NAME`, `show a box called NAME`, `show a button called NAME`, and react with `when the button called NAME is clicked do ... end when`. See the Counter page and Greeter page examples.
-
-**Connecting them (Python version).** A page the server sends can have boxes and buttons that ask the server for answers:
-
-```
-show a box called first
-show a paragraph called answer with the words Type a number. end words
-show a button with the words Add them end words that asks the path add and shows the reply in the paragraph called answer
+```sh
+python3 plainly.py version
+python3 plainly.py run hello.plain
 ```
 
-When the button is pressed, whatever is typed in the boxes is sent to the path `add`, and the reply appears in the paragraph. The handler reads each box with `the visitor sent first`. See `examples/app.plain`.
+On Windows, use `py` or `python` instead of `python3`.
 
-The browser version (`plainly-web.html`) cannot run or call a server, because published pages are not allowed to reach other machines. Use the Python version for full apps.
+### Install the command
 
-Safety: the server only answers requests for its own address (this blocks sneaky sites), page text is escaped, and pages may only run the one built-in script that sends the button request.
+From the repository folder:
 
-## Remembering between visits (Python version)
-
-A program can keep numbers, text, yes or no values, and lists of those, in a file that lasts after the program stops. Like every file, it must ask permission first.
-
-```
-allow remembering in the file memory.json
-let visits be what I remember called visits as a number or else 0
-let total be visits plus 1
-remember total as visits
+```sh
+python3 -m pip install .
 ```
 
-- `remember VALUE as NAME` saves a value under a one-word name.
-- `what I remember called NAME as TYPE` gives back a `maybe`, because nothing may be saved yet. Use `or else` for a default, or `has a value as` to check.
-- If a saved value has a different type than you ask for, you get nothing instead of a wrong value.
-- The memory file is written safely, a damaged file stops the program instead of being overwritten, and a server handles one visit at a time so counts stay right.
-- A program can use only one memory file, up to 1 MB.
+Then use the installed command:
 
-See `examples/counter.plain` and `examples/notes.plain`, a notes app with a page, a button, a server, and a memory that lasts.
-
-## A quick tour
-
-Put each sentence on its own line. Close every block with `end` and the block name.
-
-**Notes, saying, and values**
-
+```sh
+plainly version
+plainly run hello.plain
 ```
-note this line is a comment
+
+For development, install an editable copy with `python3 -m pip install -e .`.
+
+## Your first program
+
+Create a file named `hello.plain`:
+
+```plain
+note My first Plainly program
 say the words Hello, world.
-let age be 30
-set age to age plus 1
-add 5 to age
-subtract 2 from age
+let first number be 20
+let second number be 22
+let answer be first number plus second number
+say answer
 ```
 
-Text is written as `the words ... end words`. If nothing follows on the line, `end words` can be left off.
+Run it:
 
-**Maths and joining text**
-
-`plus`, `minus`, `times`, `divided by`, `modulo`. Join text with `followed by` (adds a space) or `joined to` (no space).
-
-```
-say the words Age is end words followed by age
+```sh
+python3 plainly.py run hello.plain
 ```
 
-**Choices and loops**
+Expected output:
 
+```text
+Hello, world.
+42
 ```
-if age is greater than 17 then
-say the words adult end words
-otherwise if age is at least 13 then
-say the words teen end words
+
+## Language guide
+
+A Plainly program is a sequence of sentences. Put one statement on each line.
+
+### Basic rules
+
+1. A line beginning with `note` is a comment.
+2. Blocks are closed with `end` and the block name: `end if`, `end while`, `end repeat`, `end for`, or `end define`.
+3. Names can contain multiple words. The current limit is six words.
+4. Plainly avoids punctuation in program syntax. Use words such as `plus`, `minus`, `times`, and `divided by`.
+5. Put literal text after `the words`. Use `end words` when more of the sentence follows and the end of the text would otherwise be unclear.
+6. Symbols such as quotes, brackets, parentheses, colons, semicolons, and underscores are allowed inside text, but not in normal program syntax.
+
+### Values and types
+
+The main types are:
+
+| Type | Meaning | Example |
+|---|---|---|
+| `number` | A whole or decimal number | `let score be 42` |
+| `text` | A piece of text | `let player be the words Alex` |
+| `truth` | Yes or no | `let is ready be yes` |
+| `a list of number` | A list of numbers | `let scores be a list of 4 and 8 and 15` |
+| `maybe number` | A number that may not exist | `let result be parsed number of the words 42 end words` |
+| record type | A value with named fields | See [Records](#records). |
+
+Plainly does not use a regular null value. A value that may be missing is represented by a `maybe` value and must be handled.
+
+### Variables and calculations
+
+```plain
+let balance be 100
+add 25 to balance
+subtract 10 from balance
+set balance to balance times 2
+say balance
+```
+
+Math operators are `plus`, `minus`, `times`, `divided by`, and `modulo`.
+
+Join text with `followed by` (adds a space) or `joined to` (does not add a space):
+
+```plain
+let player be the words Alex
+say the words Welcome followed by player
+```
+
+### Conditions
+
+```plain
+let score be 82
+
+if score is at least 90 then
+say the words Excellent
+otherwise if score is at least 60 then
+say the words Passed
 otherwise
-say the words child end words
+say the words Try again
 end if
+```
 
-while age is less than 40 do
-add 1 to age
-end while
+Comparisons include `is`, `is not`, `is greater than`, `is less than`, `is at least`, and `is at most`. Combine yes/no expressions with `and`, `or`, and `not`.
 
+### Loops and lists
+
+```plain
+let pets be a list of the words cat and the words dog and the words fish
+add the words bird end words to pets
+
+for each pet in pets do
+say the words I like followed by pet
+end for
+
+say length of pets
+say entry 1 of pets
+```
+
+List positions start at 1. Plainly checks that a requested position exists.
+
+Other loop forms:
+
+```plain
 repeat 3 times do
-say the words hi end words
+say the words Hello
 end repeat
 
-for each score in scores do
-say score
-end for
+let counter be 1
+while counter is at most 3 do
+say counter
+add 1 to counter
+end while
 ```
 
-Comparisons: `is`, `is not`, `is greater than`, `is less than`, `is at least`, `is at most`. Combine with `and`, `or`, `not`.
+### Functions
 
-**Lists**
+Define a function with named inputs and a return type:
 
-```
-let scores be a list of 4 and 8 and 15
-let more be an empty list of number
-add 16 to scores
-say entry 1 of scores
-say length of scores
-```
-
-**Functions**
-
-```
-define area of width as number with height as number giving number
+```plain
+define rectangle area of width as number with height as number giving number
 give back width times height
 end define
 
-say area of 3 with 4
+say rectangle area of 5 with 4
 ```
 
-**Records**
+Functions must be defined before they are used.
 
-```
-a record called item has name as text and price as number and quantity as number
-let apple be a new item with name the words apple end words and price 3 and quantity 2
+### Records
+
+A record groups named fields:
+
+```plain
+a record called item has name as text and price as number
+
+let apple be a new item with name the words apple end words and price 3
+say name of apple
 say price of apple
 ```
 
-**Maybe values**
+### Maybe values
 
-```
-let found be parsed number of the words 42 end words
-if found has a value as number then
-say number plus 1
+A conversion can produce a value that might not exist:
+
+```plain
+let parsed be parsed number of the words 42 end words
+let safe number be parsed or else 0
+say safe number
+
+if parsed has a value as actual number then
+say actual number
 otherwise
-say the words not a number end words
+say the words That was not a number
 end if
-let safe be found or else 0
 ```
 
-Also: `no number` (nothing), `some 5` (a value inside a maybe).
+### Input and built-in helpers
 
-**Files, with permission**
+- `what the user types` reads a line of text.
+- `length of` returns the length of a text value or list.
+- `square root of`, `absolute value of`, and `rounded of` work with numbers.
+- `largest of` and `smallest of` work with number lists.
+- `parsed number of` attempts to convert text into a number and returns a maybe value.
 
-```
+## Files and permissions
+
+A program must declare file access before using a file:
+
+```plain
 allow reading the file prices.txt
+allow writing the file report.txt
+
 let prices be the numbers in the file prices.txt
 say largest of prices
-allow writing the file report.txt
-write the words done end words to the file report.txt
+write the words Report complete end words to the file report.txt
 ```
 
-Also: `the contents of the file NAME`, `the lines of the file NAME`. Files must be in the program's own folder.
+The file permission syntax is an explicit language-level check. Plainly also rejects path separators, symbolic links, non-regular files, and files with multiple hard links in its runtime file helpers.
 
-**Input and built-ins**
+**This is not an operating-system sandbox.** Use a private working directory for each program. Do not share a writable directory between tenants, and do not put secrets in a directory that a program can access. Read [SECURITY.md](SECURITY.md).
 
-`what the user types` reads a line of text. Built-in helpers: `length of`, `square root of`, `absolute value of`, `rounded of`, `largest of`, `smallest of`, `parsed number of`.
+## Remembering data
 
-## How it keeps programs safe
+The Python runtime can save small values between runs. A program must declare the memory file first:
 
-- Types are checked before the program starts.
-- There is no null and no way to reach into memory.
-- Files cannot be touched without permission, checked both before and while running, and only files in the program's own folder can be used.
-- Programs cannot reach the network, other programs, or the host system.
-- Divide-by-zero, bad list positions and similar problems stop the program with a plain message.
+```plain
+allow remembering in the file memory.json
 
-This is a design goal and a prototype, not a security guarantee. Do not run untrusted code with it as your only protection.
+let visits be what I remember called visits as a number or else 0
+let updated visits be visits plus 1
+remember updated visits as visits
+say updated visits
+```
 
-## Limits
+Supported saved values include numbers, text, yes/no values, and lists of those types. A program can use one memory file. The runtime limits the serialized memory data to 1 MB.
 
-- `run` mode is Python underneath, so it is not fast. `native` is.
-- `native` supports numbers, text, yes/no values, lists of numbers, functions, and all the control sentences. It does not yet support files, records, or maybe values, and says so if you use them.
-- Native text uses memory that is never freed. Fine for normal programs, not for ones that run for days.
-- Symbols such as colons, quotes and underscores are not allowed outside text. Inside `the words ... end words` you can use any symbols, except that the two words `end words` together always end the text.
-- Text ends by itself before `followed by`, `joined to`, `that asks` and `and the words`. In other places, close it with `end words` when more of the sentence follows, for example `if said contains the words hello end words then`.
-- A name can be up to 6 words and any words, but cannot start with a number or be `true` or `false`.
-- Functions must be defined before they are used.
+## Building websites
 
-## Examples
+The Python runtime can serve a small local website. This server is intended for development and local testing. It binds to `127.0.0.1` and is not a public production web server.
 
-See the `examples` folder: `hello`, `shop` (records, functions, loops), `files` (permissions), `speed` (a native benchmark), `maybe`, and `fizz`. Files starting with `bad` show errors on purpose.
+Example `site.plain`:
 
-## Contributing and license
+```plain
+when someone visits the path home do
+show a heading with the words Welcome to my site end words
+show a paragraph with the words Built in Plainly end words
+reply with the page
+end when
 
-Ideas and bug reports are welcome. Add a license of your choice before sharing widely; MIT is a common, simple option.
+when someone visits the path hello do
+let visitor name be the visitor sent name
+reply with the words Hello followed by visitor name
+end when
+
+start the server on port 8099
+```
+
+Run it:
+
+```sh
+python3 plainly.py run site.plain
+```
+
+Open `http://127.0.0.1:8099` on the same machine. The server feature is deliberately limited. Do not expose it to the public internet without a separate security design and review.
+
+## Browser editor
+
+Open `plainly-web.html` in a modern browser. It includes lessons, a code editor, a Run button, and interactive page examples.
+
+The browser editor runs a smaller subset than the Python interpreter. It does not support file access, persistent memory, records, maybe values, or the Python web-server feature. Browser programs cannot access local files or make arbitrary network requests.
+
+## Native executable and machine code
+
+The `native` command compiles a supported subset of Plainly into C source, then invokes a system C compiler to create a native executable:
+
+```sh
+python3 plainly.py native speed.plain
+./speed
+```
+
+The native output is a platform-specific executable containing machine code. Plainly does not ask you to write raw binary instructions. It translates the Plainly program into C and lets GCC, Clang, or another compatible C compiler generate the executable.
+
+The native backend currently supports numbers, text, yes/no values, number lists, functions, and control-flow statements. It does not currently support file access, records, maybe values, or the web-server feature. The native output must be treated as executable code and run only with the same isolation precautions as any other program.
+
+## Commands
+
+| Command | Purpose |
+|---|---|
+| `plainly run FILE` | Check and run a Plainly program |
+| `plainly check FILE` | Check the program without running it |
+| `plainly fix FILE` | Write a separate repaired file when common mistakes can be fixed |
+| `plainly build FILE` | Print the generated Python |
+| `plainly c FILE` | Print the generated C for the native subset |
+| `plainly native FILE` | Build a native executable |
+| `plainly version` | Print the language version |
+
+The same commands can be run with `python3 plainly.py` instead of the installed `plainly` command.
+
+## Examples in this repository
+
+The example files are currently in the repository root:
+
+| File | Demonstrates |
+|---|---|
+| `hello.plain` | First program |
+| `fizz.plain` | Conditions, functions, and loops |
+| `shop.plain` | Records, lists, functions, and calculations |
+| `maybe.plain` | Maybe values and safe conversion |
+| `files.plain` | Explicit file permissions |
+| `counter.plain` | Local website and persistent memory |
+| `site.plain` | Local website with two routes |
+| `app.plain` | Page inputs and a server response |
+| `speed.plain` | Native compilation example |
+
+The files `discord_bot.plain` and `telegram_bot.plain` are retained as experimental drafts only. The current interpreter does not implement their bot statements; they are not working integrations and are not supported examples.
+
+## Tests and audit preparation
+
+Run these checks from the repository root:
+
+```sh
+python3 -m py_compile plainly.py
+python3 audit_tests.py
+node web_test.js
+python3 plainly.py check hello.plain
+python3 plainly.py run hello.plain
+```
+
+When a C compiler is installed, also test native output in a disposable environment:
+
+```sh
+python3 plainly.py native speed.plain
+./speed
+```
+
+GitHub Actions runs the focused Python, browser, and native regression checks on pushes and pull requests. A passing CI run demonstrates only that these automated checks passed. **It does not mean the project passed a security audit.**
+
+For audit scope, known limitations, safe deployment requirements, and vulnerability reporting, see [SECURITY.md](SECURITY.md).
+
+## Rust and Go status
+
+This release does not include Rust or Go compiler backends. The existing native path is C-based. Adding Rust or Go backends would require a separate implementation and cross-backend tests to prove that types, errors, and program behavior remain consistent. They are not being represented as implemented or audit-tested in this release.
+
+## Known limitations
+
+- Plainly is an early public release and has not received an independent security audit.
+- The interpreter executes compiler-generated Python. The restricted built-ins are not a security sandbox.
+- Runtime permissions, memory selection, and routes are module-level state. Do not run independent tenants concurrently inside one interpreter process.
+- Plainly does not impose general CPU, memory, process-count, or wall-clock limits. Enforce them outside the interpreter.
+- The local web server is not designed as a public multi-tenant server.
+- The native compiler supports only a subset of the language and produces an executable that has the privileges of the account running it.
+- The browser editor and Python runtime support different language subsets.
+- Discord and Telegram bot integration is not implemented.
+
+## Contributing
+
+Contributions and issue reports are welcome. For language changes:
+
+1. Keep new syntax consistent with the existing plain-English style.
+2. Add regression tests for valid programs and invalid input.
+3. Run the Python and browser checks before submitting a change.
+4. Update this README and [CHANGELOG.md](CHANGELOG.md) when behavior or supported syntax changes.
+5. Review the impact on [SECURITY.md](SECURITY.md), especially when adding file, network, process, or native-code capabilities.
+
+Plainly is distributed under the MIT License. See [LICENSE](LICENSE).
