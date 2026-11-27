@@ -67,7 +67,7 @@ The existing full-featured interpreter and browser editor do not support exactly
 
 Plainly 1.5.0 starts a separate implementation of the language from its foundations. The independent core includes its own tokenizer, parser, abstract syntax tree, and interpreter. Programs executed by this core are not translated into Python, JavaScript, or C.
 
-This first preview supports variables, numbers, text, yes/no values, lists, arithmetic, comparisons, boolean logic, conditions, while loops, repeat loops, and a small set of built-in functions. It includes explicit limits for source size, token count, nesting, variables, aggregate runtime values, text, collections, numeric magnitude, execution steps, and cumulative output. Source files are opened with bounded descriptor-based checks and no-follow behavior where supported. These are defense-in-depth controls, not a secure sandbox.
+This first preview supports variables, numbers, text, yes/no values, lists, arithmetic, comparisons, boolean logic, conditions, while loops, repeat loops, and a small set of built-in functions, including safe one-based list access with `at(list, position)`. It includes explicit limits for source size, token count, nesting, variables, aggregate runtime values, text, collections, numeric magnitude, execution steps, and cumulative output. Source files are opened with bounded descriptor-based checks and no-follow behavior where supported. These are defense-in-depth controls, not a secure sandbox.
 
 Try it:
 
