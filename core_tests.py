@@ -136,7 +136,7 @@ class PlainlyCoreTests(unittest.TestCase):
                     core.run_source("say 1\n", max_steps=budget)
 
     def test_combined_runtime_text_limit(self):
-        source = 'let first be "' + ("a" * 600000) + '"\nlet second be "' + ("b" * 600000) + '"\n'
+        source = 'let first be "' + ("a" * 600000) + '"\nlet second be first\n'
         with self.assertRaisesRegex(core.PlainlyCoreError, "combined runtime text limit"):
             core.run_source(source)
 
