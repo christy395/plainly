@@ -712,7 +712,7 @@ This release does not include Rust or Go compiler backends. The existing native 
 - [x] Discord Gateway heartbeat scheduling, acknowledgement checks, reconnect handling, and safe mention defaults.
 - [x] Responsive browser editor viewport support for mobile browsers and graceful local-storage failure handling.
 - [x] Cross-platform app/game project manifest, secure-default capability policy, scaffolding, and validation for five target families.
-- [x] GitHub Actions matrix for Python regression suites on Windows, macOS, and Linux, plus a separate browser-editor test job.
+- [x] GitHub Actions matrix for Python regression suites on Windows, macOS, and Linux, including the independent bytecode VM, plus a separate browser-editor test job.
 - [x] Cross-platform HTTP hosting integration checks use direct loopback TCP and tolerate malformed-request logging.
 
 ### Security hardening completed in 1.5.0
@@ -726,7 +726,10 @@ This release does not include Rust or Go compiler backends. The existing native 
 
 ### Planned work
 
-- [ ] Build a compiler and versioned Plainly-owned bytecode format directly from the independent AST; remove Python AST and generated-Python dependencies from the primary execution path.
+- [x] Add an independent AST-to-bytecode compiler and bounded stack virtual machine for the independent core, with checksummed `.core.pbc` files and no Python AST or generated-Python execution.
+- [x] Expose `core-compile` and `core-execute` commands for independent core bytecode.
+- [x] Add differential tests comparing independent interpreter and VM behavior, plus malformed/tampered bytecode and execution-budget tests.
+- [ ] Expand the independent compiler with functions, records, modules, packages, error handling, and a versioned standard library.
 - [ ] Add static type checking, functions, records, modules, packages, error handling, and a versioned standard library to the independent core.
 - [ ] Create a browser compilation target using WebAssembly, with Plainly-owned browser APIs and no user-authored JavaScript requirement.
 - [ ] Build Plainly's frontend system for page structure, styling, browser events, accessibility, and component composition.
