@@ -118,7 +118,9 @@ Function declarations, user-defined functions, records, nullable/maybe values, m
 | Execution steps | 100,000 |
 | Repeat count | 100,000 |
 | List items | 10,000 |
-| Text value / retained variable text / output | 1 MiB |\n| Declared variables | 10,000 |\n| Aggregate runtime values | 100,000 |
+| Text value / retained variable text / output | 1 MiB |
+| Declared variables | 10,000 |
+| Aggregate runtime values | 100,000 |
 | Numeric magnitude | 10^100 |
 
 The runtime also validates caller-supplied execution budgets and safely opens source files with descriptor-based checks, strict UTF-8 decoding, bounded reads, and no-follow behavior where the operating system supports it. Limits are defense-in-depth against accidental resource exhaustion. They do not turn the interpreter into a secure sandbox.
