@@ -1093,12 +1093,12 @@ class Compiler:
 
     def s_allow(self):
         self.take()
-        if self.match("running", "a", "Discord", "bot"):
+        if self.match("running", "a", "discord", "bot"):
             self.no_native("Discord bots")
             self.finish()
             self.bot_permissions.add("discord")
             return
-        if self.match("running", "a", "Telegram", "bot"):
+        if self.match("running", "a", "telegram", "bot"):
             self.no_native("Telegram bots")
             self.finish()
             self.bot_permissions.add("telegram")
@@ -1152,9 +1152,9 @@ class Compiler:
             raise self.err("'when' blocks must be at the top level of the program")
         self.take()
         platform = None
-        if self.match("a", "Discord", "message", "arrives"):
+        if self.match("a", "discord", "message", "arrives"):
             platform = "discord"
-        elif self.match("a", "Telegram", "message", "arrives"):
+        elif self.match("a", "telegram", "message", "arrives"):
             platform = "telegram"
         if platform:
             if platform not in self.bot_permissions:
@@ -1293,7 +1293,7 @@ class Compiler:
         if self.blocks:
             raise self.err("'start' must be at the top level of the program")
         self.take()
-        if self.match("the", "Discord", "bot"):
+        if self.match("the", "discord", "bot"):
             self.finish()
             if "discord" not in self.bot_permissions:
                 raise self.err("ask permission first with 'allow running a Discord bot'")
@@ -1301,7 +1301,7 @@ class Compiler:
                 raise self.err("add a 'when a Discord message arrives' handler before starting the bot")
             self.emit("_start_bot('discord')")
             return
-        if self.match("the", "Telegram", "bot"):
+        if self.match("the", "telegram", "bot"):
             self.finish()
             if "telegram" not in self.bot_permissions:
                 raise self.err("ask permission first with 'allow running a Telegram bot'")
