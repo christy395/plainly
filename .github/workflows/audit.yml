@@ -23,10 +23,16 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Compile interpreter
-        run: python -m py_compile plainly.py
+      - name: Compile interpreter and bytecode VM
+        run: python -m py_compile plainly.py plainly_bytecode.py
       - name: Run audit regression tests
         run: python audit_tests.py
+      - name: Run bytecode regression tests
+        run: python bytecode_tests.py
+      - name: Compile and execute a bytecode example
+        run: |
+          python plainly.py compile hello.plain
+          python plainly.py execute hello.pbc
       - name: Check and run the first example
         run: |
           python plainly.py check hello.plain
