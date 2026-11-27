@@ -410,6 +410,44 @@ Open `plainly-web.html` in a modern browser. It includes lessons, a code editor,
 
 The browser editor runs a smaller subset than the Python interpreter. It does not support file access, persistent memory, records, maybe values, or the Python web-server feature. Browser programs cannot access local files or make arbitrary network requests.
 
+## Binary bytecode (.pbc)
+
+Plainly can compile supported programs into a versioned binary bytecode file and run them in its own virtual machine. This is separate from the existing `native` command: bytecode runs in the Plainly VM and does not require a C compiler.
+
+Compile a program and run its bytecode:
+
+```sh
+python3 plainly.py compile hello.plain
+python3 plainly.py execute hello.pbc
+```
+
+When Plainly is installed as a command, use:
+
+```sh
+plainly compile hello.plain
+plainly execute hello.pbc
+```
+
+The compiler creates the `.pbc` file next to the source file. For example, compiling `hello.plain` creates `hello.pbc`. The file starts with the Plainly bytecode signature, includes a format version and integrity checksum, and stores VM instructions and function metadata in binary form. You can copy the `.pbc` file to another compatible Plainly installation and execute it there.
+
+### Bytecode version 1 support
+
+The first bytecode version supports:
+- Number, text, and yes/no values, variables, and arithmetic.
+- Comparisons, `and`, `or`, and `not`.
+- `if` / `otherwise`, `while`, `repeat`, and `for each` loops.
+- Lists, adding values to lists, and iterating over lists.
+- User-defined functions, function inputs, and returned values.
+- Text joining, user input, and supported numeric/list helpers.
+
+The normal Plainly parser and type checker validate source programs before bytecode is created. The bytecode compiler then translates the checked program into VM instructions; it does not execute the generated Python.
+
+### Current limitations
+
+Bytecode version 1 does not support records, maybe-value pattern matching, file access, persistent memory, web servers/pages, or Discord/Telegram bot features. The compiler reports an unsupported feature instead of pretending it was compiled. These features remain available only through the existing interpreter where implemented.
+
+The VM limits execution to 1,000,000 instructions per run and limits nested function calls. These safeguards help stop accidental infinite loops, but bytecode is not a general-purpose security sandbox. Do not run bytecode from untrusted sources on a machine with sensitive data.
+
 ## Native executable and machine code
 
 The `native` command compiles a supported subset of Plainly into C source, then invokes a system C compiler to create a native executable:
