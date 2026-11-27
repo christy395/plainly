@@ -70,8 +70,8 @@ class PlainlyCoreTests(unittest.TestCase):
             core.run_source("repeat 100000 times do\nend repeat\n", max_steps=30)
 
     def test_cumulative_output_limit_is_enforced(self):
-        payload = "a" * 700000
-        source = 'let big be "' + payload + '"\nsay big\nsay big\n'
+        payload = "a" * 7000
+        source = 'let big be "' + payload + '"\nrepeat 200 times do\nsay big\nend repeat\n'
         with self.assertRaisesRegex(core.PlainlyCoreError, "output exceeded"):
             core.run_source(source)
 
