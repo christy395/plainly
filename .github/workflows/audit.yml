@@ -33,6 +33,12 @@ jobs:
         run: |
           python plainly.py compile hello.plain
           python plainly.py execute hello.pbc
+      - name: Test installed package and console command
+        run: |
+          python -m pip install --no-deps .
+          plainly version
+          plainly compile hello.plain
+          plainly execute hello.pbc
       - name: Check and run the first example
         run: |
           python plainly.py check hello.plain
