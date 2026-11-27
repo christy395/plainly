@@ -87,7 +87,14 @@ python3 plainly.py check hello.plain
 python3 plainly.py run hello.plain
 ```
 
-If a C compiler is available, test the native path:
+If a GCC/Clang-compatible C compiler is available, test the native path. On Windows, the output has an `.exe` suffix and is run from PowerShell:
+
+```powershell
+python plainly.py native speed.plain
+.\\speed.exe
+```
+
+On macOS or Linux:
 
 ```sh
 python3 plainly.py native speed.plain
