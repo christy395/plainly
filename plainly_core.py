@@ -603,22 +603,35 @@ def run_source(source, max_steps=MAX_STEPS):
 def read_source_file(path):
     import os
     import stat
-    if os.path.islink(path):
-        raise PlainlyCoreError("source path must not be a symbolic link")
-    info = os.stat(path)
-    if not stat.S_ISREG(info.st_mode):
-        raise PlainlyCoreError("source path must be a regular file")
-    if info.st_size > MAX_SOURCE_BYTES:
-        raise PlainlyCoreError("source is larger than the 1 MiB limit")
+    flags = os.O_RDONLY
+    flags |= getattr(os, "O_BINARY", 0)
+    flags |= getattr(os, "O_NOFOLLOW", 0)
     try:
-        with open(path, "r", encoding="utf-8") as handle:
-            source = handle.read(MAX_SOURCE_BYTES + 1)
-    except UnicodeError:
-        raise PlainlyCoreError("source file must contain valid UTF-8 text")
-    if len(source.encode("utf-8")) > MAX_SOURCE_BYTES:
-        raise PlainlyCoreError("source is larger than the 1 MiB limit")
-    return source
-
+        descriptor = os.open(path, flags)
+    except OSError as exc:
+        raise PlainlyCoreError("cannot safely open source file: %s" % exc)
+    try:
+        info = os.fstat(descriptor)
+        if not stat.S_ISREG(info.st_mode):
+            raise PlainlyCoreError("source path must be a regular file")
+        if info.st_size > MAX_SOURCE_BYTES:
+            raise PlainlyCoreError("source is larger than the 1 MiB limit")
+        chunks = []
+        total = 0
+        while True:
+            chunk = os.read(descriptor, min(65536, MAX_SOURCE_BYTES + 1 - total))
+            if not chunk:
+                break
+            chunks.append(chunk)
+            total += len(chunk)
+            if total > MAX_SOURCE_BYTES:
+                raise PlainlyCoreError("source is larger than the 1 MiB limit")
+        try:
+            return b"".join(chunks).decode("utf-8", errors="strict")
+        except UnicodeDecodeError:
+            raise PlainlyCoreError("source file must contain valid UTF-8 text")
+    finally:
+        os.close(descriptor)
 
 def check_file(path):
     return check_source(read_source_file(path))
