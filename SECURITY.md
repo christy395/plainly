@@ -2,13 +2,14 @@
 
 ## Status
 
-Plainly 1.4.0 is being prepared for an independent security review. **It has not been independently audited, certified, or approved for running untrusted programs.** The checks in this repository are regression tests only.
+Plainly 1.5.0 is being prepared for an independent security review. **It has not been independently audited, certified, or approved for running untrusted programs.** The checks in this repository are regression tests only.
 
 Please do not treat this document, the permission syntax, or a passing test suite as proof that Plainly is a secure sandbox.
 
 ## Supported execution paths
 
-- `run` compiles Plainly source into generated Python and executes that generated code with a restricted set of built-ins.
+- `core-check` parses source with the independent Plainly tokenizer and parser. `core-run` executes its Plainly AST directly in the independent core interpreter; it does not generate or execute Python, JavaScript, or C. This core has no file, network, process, browser, or native-extension statements yet.
+- The compatibility `run` command still compiles legacy Plainly source into generated Python and executes that generated code with a restricted set of built-ins.
 - `compile` validates supported source and emits a versioned `.pbc` binary instruction file. `execute` runs those instructions in the Plainly virtual machine; bytecode version 1 does not evaluate generated Python or expose file, network, or operating-system process instructions.
 - `native` generates C for the currently supported subset and invokes an installed C compiler to create a native executable. The build command does not run the resulting executable.
 - `plainly-web.html` runs its supported subset in the browser. Its page explains that browser programs cannot access the user's files or call a server.
@@ -43,7 +44,9 @@ These checks reduce accidental or simple link-based escapes. They do not make a 
 
 ## Known limitations and review targets
 
-- The `run` interpreter uses Python `exec` on compiler-generated code. The limited built-ins are not a sandbox against hostile source or runtime vulnerabilities.
+- The compatibility `run` interpreter uses Python `exec` on compiler-generated code. The limited built-ins are not a sandbox against hostile source or runtime vulnerabilities.
+- The independent 0.1 core is a preview with a deliberately small grammar and runtime type checks, not static type checking. It runs inside the host Python process. Its source, line, token, nesting, instruction, numeric, text, and list limits reduce some accidental resource exhaustion but do not provide an OS sandbox, memory quota, process isolation, or protection from interpreter vulnerabilities.
+- The independent core is not yet the default `run` path. The legacy implementation remains active for full 1.4 language feature compatibility until the independent engine reaches feature parity.
 - Bytecode version 1 validates its magic, version, length, and SHA-256 checksum, and limits a run to 1,000,000 VM instructions, nested function calls to 100 levels, and bytecode files to 16 MiB. The checksum is not a digital signature or creator identity check. The VM does not provide general memory quotas or OS isolation, and implementation vulnerabilities remain possible.
 - Runtime state such as file permissions, memory-file selection, and HTTP routes is held in module-level state. Independent tenants must not share one interpreter process.
 - Programs can use unbounded loops or consume substantial CPU and memory. Plainly does not itself provide general CPU, memory, process, or wall-clock quotas.
@@ -62,9 +65,12 @@ These checks reduce accidental or simple link-based escapes. They do not make a 
 Run from the repository root:
 
 ```sh
-python3 -m py_compile plainly.py plainly_bytecode.py
+python3 -m py_compile plainly.py plainly_bytecode.py plainly_core.py
 python3 audit_tests.py
+python3 core_tests.py
 python3 bytecode_tests.py
+python3 plainly.py core-check core_hello.plain
+python3 plainly.py core-run core_hello.plain
 python3 plainly.py compile hello.plain
 python3 plainly.py execute hello.pbc
 node web_test.js
