@@ -26,7 +26,7 @@ OPS = {
     "REPEAT_START": 14, "REPEAT_NEXT": 15, "HALT": 16,
 }
 _ALLOWED_BINARY = {"+", "-", "*", "/", "//", "%", "**", "==", "!=", "<", "<=", ">", ">="}
-_ALLOWED_CALLS = {"length", "sqrt", "absolute", "largest", "smallest"}
+_ALLOWED_CALLS = {"length", "at", "sqrt", "absolute", "largest", "smallest"}
 
 
 class CoreBytecodeError(Exception):
@@ -331,6 +331,13 @@ class VirtualMachine:
     def builtin(self, name, args, line):
         if name == "length" and len(args) == 1 and isinstance(args[0], (str, list)):
             return len(args[0])
+        if name == "at" and len(args) == 2 and isinstance(args[0], list):
+            index = core.Interpreter().checked_number(args[1], line)
+            if int(index) != index:
+                raise core.PlainlyCoreError("at needs a whole-number position", line)
+            if index < 1 or index > len(args[0]):
+                raise core.PlainlyCoreError("list position is outside the list", line)
+            return args[0][int(index) - 1]
         if name == "sqrt" and len(args) == 1:
             n = core.Interpreter().checked_number(args[0], line)
             if n < 0: raise core.PlainlyCoreError("square root needs a non-negative number", line)
