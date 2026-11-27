@@ -21,7 +21,7 @@ MAX_VARIABLES = core.MAX_VARIABLES
 
 OPS = {
     "CONST": 1, "LOAD": 2, "DECLARE": 3, "STORE": 4, "SAY": 5,
-    "POP": 6, "UNARY": 7, "BINARY": 8, "CALL": 9, "BUILD_LIST": 10,
+    "POP": 6, "DUP": 17, "UNARY": 7, "BINARY": 8, "CALL": 9, "BUILD_LIST": 10,
     "JUMP": 11, "JUMP_FALSE": 12, "JUMP_TRUE": 13,
     "REPEAT_START": 14, "REPEAT_NEXT": 15, "HALT": 16,
 }
@@ -75,13 +75,14 @@ class Compiler:
             left, right = expr.children
             if value == "and":
                 self.expression(left)
-                self.emit("DUP", expr.line) if False else None
+                self.emit("DUP", expr.line)
                 jump = self.emit("JUMP_FALSE", -1, expr.line)
                 self.emit("POP", expr.line)
                 self.expression(right)
                 self.patch(jump, len(self.code))
             elif value == "or":
                 self.expression(left)
+                self.emit("DUP", expr.line)
                 jump = self.emit("JUMP_TRUE", -1, expr.line)
                 self.expression(right)
                 self.patch(jump, len(self.code))
@@ -156,7 +157,7 @@ def _validate_program(program):
         op = item[0]
         expected = {
             "CONST": 3, "LOAD": 3, "DECLARE": 3, "STORE": 3, "SAY": 2,
-            "POP": 2, "UNARY": 3, "BINARY": 3, "CALL": 4,
+            "POP": 2, "DUP": 2, "UNARY": 3, "BINARY": 3, "CALL": 4,
             "BUILD_LIST": 3, "JUMP": 3, "JUMP_FALSE": 3, "JUMP_TRUE": 3,
             "REPEAT_START": 3, "REPEAT_NEXT": 3, "HALT": 1,
         }[op]
@@ -343,6 +344,7 @@ class VirtualMachine:
                 self.output_bytes += size
                 self.output.append(value)
             elif op == "POP": self.pop(line)
+            elif op == "DUP": self.push(self.stack[-1] if self.stack else (_ for _ in ()).throw(CoreBytecodeError("bytecode stack underflow")), line)
             elif op == "UNARY":
                 value = self.pop(line)
                 if item[1] == "not":
