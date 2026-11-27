@@ -76,7 +76,7 @@ class HostingTests(unittest.TestCase):
             "reply with the words Hosted with Plainly end words\n"
             "end when\n"
             "start the server on port 8099\n")
-        child_env = dict(os.environ, PYTHONUNBUFFERED="1")
+        child_env = dict(os.environ, PYTHONUNBUFFERED="1", PLAINLY_DEBUG_SERVER="1")
         process = subprocess.Popen(
             [sys.executable, PLAINLY, "run", path,
              "--host", "127.0.0.1", "--port", str(port), "--allow-host", "example.test"],
