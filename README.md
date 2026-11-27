@@ -628,6 +628,7 @@ This release does not include Rust or Go compiler backends. The existing native 
 - [x] Basic Discord and Telegram text-message bot integrations.
 - [x] A Python process adapter for provider-managed app lifecycle and logs.
 - [x] Local mock-based integration tests for bot and hosting behavior.
+- [x] Discord Gateway heartbeat scheduling, acknowledgement checks, reconnect handling, and safe mention defaults.
 
 ### Planned work
 
