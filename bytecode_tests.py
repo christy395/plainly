@@ -127,7 +127,7 @@ class BytecodeTests(unittest.TestCase):
         output = io.StringIO()
         with contextlib.redirect_stdout(output):
             bc.run_bytes(blob)
-        self.assertEqual(output.getvalue(), "Hello, world.\\n")
+        self.assertEqual(output.getvalue(), "Hello, world.\n")
 
     def test_file_and_cli_round_trip(self):
         with tempfile.TemporaryDirectory() as directory:
