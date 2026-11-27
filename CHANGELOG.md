@@ -23,6 +23,7 @@
 
 ## Unreleased
 
+- Correct HTTP CRLF framing in the cross-platform hosting integration test and make server access logging safe for malformed requests.
 - Use direct TCP loopback requests in hosting integration tests and capture macOS child-process/listener diagnostics on failure.
 - Improve cross-platform local hosting readiness checks with shorter retries, a longer startup allowance, unbuffered child output, and actionable failure diagnostics.
 - Make local HTTP integration tests bypass inherited proxy settings so loopback checks work consistently on macOS, Windows, and Linux.
