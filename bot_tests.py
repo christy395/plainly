@@ -153,7 +153,7 @@ class BotIntegrationTests(unittest.TestCase):
                 self.fail("Discord bot did not connect and respond. stdout=%r stderr=%r" % (stdout, stderr))
             self.assertEqual(len(mock.posts), 1)
             self.assertEqual(mock.posts[0][0], "/channels/999/messages")
-            self.assertEqual(mock.posts[0][1], {"content": "Hello Bob"})
+            self.assertEqual(mock.posts[0][1], {"content": "Hello Bob", "allowed_mentions": {"parse": []}})
             self.assertEqual(mock.posts[0][2], "Bot TESTTOKEN")
             self.assertTrue(mock.posts[0][3].startswith("DiscordBot ("))
             self.assertEqual(mock.identify[0]["intents"], 37376)
