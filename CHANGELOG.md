@@ -30,6 +30,7 @@
 - Harden bytecode validation against duplicate JSON keys, early HALT instructions, invalid jumps, malformed operands, and unsafe numeric values.
 - Extend the Windows, macOS, and Linux CI matrix to compile, test, and execute independent core bytecode samples.
 - Add a documented independent-core threat model and deterministic seeded source/bytecode fuzz regression tests, executed on every CI platform.
+- Add subprocess-level CLI regression tests for compilation from another working directory, clean source-error reporting, and refusal to overwrite existing bytecode.
 
 
 - Pin the separate cross-platform CI workflow to Ubuntu 24.04, Windows Server 2022, and macOS 15 so runner-image changes do not silently break Python compatibility jobs.
