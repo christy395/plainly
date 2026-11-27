@@ -240,8 +240,12 @@ def loads(blob):
         raise CoreBytecodeError("bytecode checksum mismatch")
     try:
         program = json.loads(payload.decode("utf-8"), object_pairs_hook=_unique_object)
-    except (UnicodeDecodeError, ValueError):
-        raise CoreBytecodeError("bytecode payload is not valid UTF-8 JSON") from None
+    except UnicodeDecodeError:
+        raise CoreBytecodeError("bytecode payload is not valid UTF-8") from None
+    except ValueError as exc:
+        if "duplicate JSON object key" in str(exc):
+            raise CoreBytecodeError("bytecode contains duplicate JSON object keys") from None
+        raise CoreBytecodeError("bytecode payload is not valid JSON") from None
     return _validate_program(program)
 
 
