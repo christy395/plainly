@@ -400,6 +400,11 @@ def _visitor(name):
     return _TL.query.get(name, [""])[0]
 
 
+def _server_debug(message):
+    if os.environ.get("PLAINLY_DEBUG_SERVER") == "1":
+        print("Plainly server debug: " + message, file=sys.stderr, flush=True)
+
+
 def _serve(port):
     config = _SERVER_CONFIG
     configured_port = config.get("port") or os.environ.get("PORT") or port
@@ -411,6 +416,7 @@ def _serve(port):
         raise PlainlyRuntimeError("the configured port must be from 1 to 65535")
 
     host = config.get("host") or os.environ.get("PLAINLY_HOST") or "127.0.0.1"
+    _server_debug("configuration resolved to %s:%d" % (host, port))
     allowed = set()
     for item in config.get("allowed_hosts", []):
         name = _normalise_host(item)
@@ -469,12 +475,15 @@ def _serve(port):
         def log_message(self, fmt, *args):
             print("  %s %s" % (getattr(self, "command", "-"), getattr(self, "path", "-")))
 
+    _server_debug("creating HTTP listener")
     try:
         srv = ThreadingHTTPServer((host, port), Handler)
     except OSError:
         raise PlainlyRuntimeError("could not start on %s:%d; check the host and port" % (host, port))
+    _server_debug("HTTP listener created and bound")
     srv.daemon_threads = True
-    print("Serving Plainly on %s:%d (Ctrl+C to stop)" % (host, port))
+    print("Serving Plainly on %s:%d (Ctrl+C to stop)" % (host, port), flush=True)
+    _server_debug("entering serve_forever")
     try:
         srv.serve_forever()
     except KeyboardInterrupt:
