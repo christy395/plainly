@@ -14,7 +14,7 @@ say the words You are not a teenager
 end if
 ```
 
-<sub>Current version: **1.3.0** · License: MIT · Status: early public release, preparing for independent security review</sub>
+<sub>Current version: **1.4.0** · License: MIT · Status: early public release, preparing for independent security review</sub>
 
 > **Security notice:** Plainly is a programming language and runtime, not a secure sandbox. Do not run programs from untrusted people on a machine or account that contains secrets or important data. Read [SECURITY.md](SECURITY.md) before hosting programs for other users. This project has not been independently audited.
 
@@ -30,6 +30,7 @@ end if
 - [Remembering data](#remembering-data)
 - [Building websites](#building-websites)
 - [Discord and Telegram bots](#discord-and-telegram-bots)
+- [Cross-platform apps and games](#cross-platform-apps-and-games)
 - [Hosting provider integration](#hosting-provider-integration)
 - [Browser editor](#browser-editor)
 - [Native executable and machine code](#native-executable-and-machine-code)
@@ -43,7 +44,7 @@ end if
 
 ## What Plainly can do
 
-Plainly 1.3.0 currently includes:
+Plainly 1.4.0 currently includes:
 
 - English-like statements, variables, calculations, comparisons, and yes/no logic.
 - Lists, records, user-defined functions, loops, and conditional blocks.
@@ -53,6 +54,7 @@ Plainly 1.3.0 currently includes:
 - Explicit file permissions and a small persistent memory feature.
 - A small Python web server with routes, pages, input boxes, buttons, and provider-configurable host/port settings.
 - Basic text-message integrations for Discord and Telegram bots in the Python runtime.
+- A secure-by-default project manifest and app/game scaffolder with Android, iOS, Windows, Linux, and macOS target declarations.
 - A provider process adapter for starting, stopping, checking, and reading logs from individual Plainly app processes.
 - A browser editor that runs its supported language subset without installing Python.
 - A native compilation path for a restricted subset of the language.
@@ -460,6 +462,20 @@ Store tokens in environment secrets, never in source code:
 
 The current integrations handle ordinary text messages and text replies. They do not yet implement slash commands, interactions, reactions, attachments, voice, or Telegram webhooks. Read [HOSTING.md](HOSTING.md) before deploying bots.
 
+## Cross-platform apps and games
+
+Plainly 1.4.0 introduces a shared project format and starter-project workflow:
+
+```sh
+plainly init app MyApp
+plainly init game MyGame
+plainly project-check MyGame
+```
+
+Each project contains `plainly.project.json` and `main.plain`. The manifest can declare Android, iOS, Windows, Linux, and macOS as intended targets. Security capabilities default to an empty list, network access defaults to denied, filesystem access is scoped to the project, and native extensions default to disabled. The validator rejects duplicate JSON keys, unknown fields and capabilities, unsupported targets, unsafe entry paths, symlinked source files, and oversized project inputs.
+
+**Important:** these are project-format and validation foundations, not native app/game exporters. Plainly does not yet produce Android APK/AAB files, iOS IPA files, Windows installers, Linux packages, or macOS app bundles. Native UI, graphics, audio, input, mobile packaging, signing, and platform-specific SDK adapters remain future work. See [PLATFORM_SUPPORT.md](PLATFORM_SUPPORT.md) for the exact status and build-tool requirements.
+
 ## Hosting provider integration
 
 The `plainly_host.py` module provides a Python process adapter for a provider to integrate into its own dashboard and control plane:
@@ -621,7 +637,7 @@ This release does not include Rust or Go compiler backends. The existing native 
 
 ## Roadmap
 
-### Available in 1.3.0
+### Available in 1.4.0
 
 - [x] Versioned binary .pbc format and a dedicated bytecode VM for the supported compute subset.
 - [x] Provider-controlled host, port, and Host-header allowlist for the small website server.
@@ -629,12 +645,16 @@ This release does not include Rust or Go compiler backends. The existing native 
 - [x] A Python process adapter for provider-managed app lifecycle and logs.
 - [x] Local mock-based integration tests for bot and hosting behavior.
 - [x] Discord Gateway heartbeat scheduling, acknowledgement checks, reconnect handling, and safe mention defaults.
+- [x] Cross-platform app/game project manifest, secure-default capability policy, scaffolding, and validation for five target families.
 
 ### Planned work
 
 - [ ] Production-grade container or VM isolation examples and provider-specific resource controls.
 - [ ] Durable job recovery, health monitoring, metrics, quotas, and automatic restarts in a provider control plane.
 - [ ] More complete bot features, including Discord interactions and Telegram webhook support.
+- [ ] Native app/game runtime and build adapters for Android, iOS, Windows, Linux, and macOS.
+- [ ] Shared graphics, audio, input, UI, storage, and lifecycle APIs for games and applications.
+- [ ] Reproducible builds, signed artifacts, software bill of materials, and verified dependency lockfiles.
 - [ ] A more capable public web runtime with stronger request controls and application lifecycle hooks.
 
 The planned items are not implemented features. Update this section whenever runtime capabilities change.
