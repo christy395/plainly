@@ -344,7 +344,10 @@ class VirtualMachine:
                 self.output_bytes += size
                 self.output.append(value)
             elif op == "POP": self.pop(line)
-            elif op == "DUP": self.push(self.stack[-1] if self.stack else (_ for _ in ()).throw(CoreBytecodeError("bytecode stack underflow")), line)
+            elif op == "DUP":
+                if not self.stack:
+                    raise CoreBytecodeError("bytecode stack underflow")
+                self.push(self.stack[-1], line)
             elif op == "UNARY":
                 value = self.pop(line)
                 if item[1] == "not":
