@@ -467,7 +467,7 @@ def _serve(port):
             self.wfile.write(data)
 
         def log_message(self, fmt, *args):
-            print("  %s %s" % (self.command, self.path))
+            print("  %s %s" % (getattr(self, "command", "-"), getattr(self, "path", "-")))
 
     try:
         srv = ThreadingHTTPServer((host, port), Handler)
