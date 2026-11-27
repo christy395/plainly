@@ -85,6 +85,21 @@ class CoreBytecodeTests(unittest.TestCase):
         with self.assertRaisesRegex(bytecode.CoreBytecodeError, "unknown instruction|invalid instruction"):
             bytecode.dumps(program)
 
+    def test_non_text_opcode_is_rejected_cleanly(self):
+        program = bytecode.compile_source("say 1\\n")
+        program["code"][0][0] = []
+        with self.assertRaisesRegex(bytecode.CoreBytecodeError, "invalid instruction"):
+            bytecode.dumps(program)
+
+    def test_non_text_operator_is_rejected_cleanly(self):
+        program = bytecode.compile_source("say 1 plus 2\\n")
+        for instruction in program["code"]:
+            if instruction[0] == "BINARY":
+                instruction[1] = []
+                break
+        with self.assertRaisesRegex(bytecode.CoreBytecodeError, "invalid binary operator"):
+            bytecode.dumps(program)
+
     def test_invalid_jump_rejected(self):
         program = bytecode.compile_source("say 1\n")
         program["code"][0] = ["JUMP", 999999, 1]
