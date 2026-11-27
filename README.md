@@ -8,13 +8,13 @@ Plainly lets you write programs as instructions instead of traditional punctuati
 let age be 15
 
 if age is at least 13 then
-say the words You are a teenager
+say "You are a teenager"
 otherwise
-say the words You are not a teenager
+say "You are not a teenager"
 end if
 ```
 
-<sub>Current version: **1.4.0** · License: MIT · Status: early public release, preparing for independent security review</sub>
+<sub>Current version: **1.5.0** · License: MIT · Status: early public release, preparing for independent security review</sub>
 
 > **Security notice:** Plainly is a programming language and runtime, not a secure sandbox. Do not run programs from untrusted people on a machine or account that contains secrets or important data. Read [SECURITY.md](SECURITY.md) before hosting programs for other users. This project has not been independently audited.
 
@@ -23,6 +23,7 @@ end if
 ## Contents
 
 - [What Plainly can do](#what-plainly-can-do)
+- [Independent Plainly core](#independent-plainly-core)
 - [Quick start](#quick-start)
 - [Your first program](#your-first-program)
 - [Language guide](#language-guide)
@@ -44,7 +45,7 @@ end if
 
 ## What Plainly can do
 
-Plainly 1.4.0 currently includes:
+The 1.5.0 repository includes the existing 1.4 language implementation and a new independent core preview:
 
 - English-like statements, variables, calculations, comparisons, and yes/no logic.
 - Lists, records, user-defined functions, loops, and conditional blocks.
@@ -57,9 +58,39 @@ Plainly 1.4.0 currently includes:
 - A secure-by-default project manifest and app/game scaffolder with Android, iOS, Windows, Linux, and macOS target declarations.
 - A provider process adapter for starting, stopping, checking, and reading logs from individual Plainly app processes.
 - A browser editor that runs its supported language subset without installing Python.
-- A native compilation path for a restricted subset of the language.
+- A native compilation path for a restricted subset of the legacy language.
+- An independent Plainly core with its own tokenizer, parser, syntax tree, and interpreter. It does not generate or execute Python, JavaScript, or C.
 
-The Python runtime and browser editor do not support exactly the same features. See [Known limitations](#known-limitations).
+The existing full-featured interpreter and browser editor do not support exactly the same features. See [Known limitations](#known-limitations).
+
+## Independent Plainly core
+
+Plainly 1.5.0 starts a separate implementation of the language from its foundations. The independent core includes its own tokenizer, parser, abstract syntax tree, and interpreter. Programs executed by this core are not translated into Python, JavaScript, or C.
+
+This first preview supports variables, numbers, text, yes/no values, lists, arithmetic, comparisons, boolean logic, conditions, while loops, repeat loops, and a small set of built-in functions. It includes explicit limits for source size, token count, nesting, text, collections, numeric magnitude, and execution steps.
+
+Try it:
+
+~~~plain
+let score be 10
+set score to score plus 5
+if score is at least 15 then
+say "Plainly is running its own interpreter"
+otherwise
+say "Try again"
+end if
+~~~
+
+Check and run the included example:
+
+~~~sh
+plainly core-check core_hello.plain
+plainly core-run core_hello.plain
+~~~
+
+Read the exact grammar and current limits in [LANGUAGE_SPEC.md](LANGUAGE_SPEC.md).
+
+**Important:** this is the beginning of the rebuild, not full feature parity. The older run, check, build, native, compile, and execute commands still use the 1.4 implementation. The independent core does not yet have user-defined functions, records, modules, static type declarations, a compiler, a browser target, or a production web framework. These are planned stages, not shipped features.
 
 ## Installation
 
@@ -163,6 +194,8 @@ To leave the virtual environment, run `deactivate`.
 
 ```sh
 plainly version
+plainly core-check core_hello.plain
+plainly core-run core_hello.plain
 plainly check hello.plain
 plainly run hello.plain
 ```
@@ -637,8 +670,11 @@ This release does not include Rust or Go compiler backends. The existing native 
 
 ## Roadmap
 
-### Available in 1.4.0
+### Available in 1.5.0
 
+- [x] Independent Plainly tokenizer, parser, AST, and interpreter preview that does not generate or execute Python, JavaScript, or C.
+- [x] Dedicated core commands, documented grammar, execution limits, and regression tests for malformed source, Unicode, arithmetic errors, and runaway loops.
+- [x] Keep the 1.4 language implementation available as a compatibility path while the independent core grows to feature parity.
 - [x] Versioned binary .pbc format and a dedicated bytecode VM for the supported compute subset.
 - [x] Provider-controlled host, port, and Host-header allowlist for the small website server.
 - [x] Basic Discord and Telegram text-message bot integrations.
@@ -649,6 +685,13 @@ This release does not include Rust or Go compiler backends. The existing native 
 
 ### Planned work
 
+- [ ] Build a compiler and versioned Plainly-owned bytecode format directly from the independent AST; remove Python AST and generated-Python dependencies from the primary execution path.
+- [ ] Add static type checking, functions, records, modules, packages, error handling, and a versioned standard library to the independent core.
+- [ ] Create a browser compilation target using WebAssembly, with Plainly-owned browser APIs and no user-authored JavaScript requirement.
+- [ ] Build Plainly's frontend system for page structure, styling, browser events, accessibility, and component composition.
+- [ ] Add a backend and web application framework with HTTP routing, database drivers, authentication primitives, and safe secret handling.
+- [ ] Build a package manager, project/build tooling, formatter, debugger, language server, and cross-platform test harness for Plainly projects.
+- [ ] Migrate the full legacy language feature set to the independent implementation, then retire the generated-Python execution path.
 - [ ] Production-grade container or VM isolation examples and provider-specific resource controls.
 - [ ] Durable job recovery, health monitoring, metrics, quotas, and automatic restarts in a provider control plane.
 - [ ] More complete bot features, including Discord interactions and Telegram webhook support.
