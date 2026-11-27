@@ -2,7 +2,7 @@
 
 ## Status
 
-Plainly 1.3.0 is being prepared for an independent security review. **It has not been independently audited, certified, or approved for running untrusted programs.** The checks in this repository are regression tests only.
+Plainly 1.4.0 is being prepared for an independent security review. **It has not been independently audited, certified, or approved for running untrusted programs.** The checks in this repository are regression tests only.
 
 Please do not treat this document, the permission syntax, or a passing test suite as proof that Plainly is a secure sandbox.
 
@@ -17,6 +17,10 @@ Please do not treat this document, the permission syntax, or a passing test suit
 - plainly_host.py can start each app as a separate child process with a reduced environment. It does not create containers, namespaces, cgroups, network policies, or resource quotas.
 
 The restricted Python built-ins and Plainly's file permission statements are **not** an operating-system security boundary. Generated Python is executed with the permissions of the Plainly process. The bytecode VM has a narrower feature set, but still runs inside the Plainly process and is not an OS sandbox. A native executable has the permissions of the account that runs it.
+
+## Project manifest security in 1.4.0
+
+The project scaffold starts with no granted capabilities, denied network access, project-only filesystem scope, and native extensions disabled. The validator rejects duplicate JSON keys, unknown manifest fields, unknown capabilities, invalid platform targets, path traversal in the entry filename, symlinked or non-regular manifest/source files, hard-linked files, and inputs over fixed size limits. These checks protect project parsing and reduce unsafe configuration mistakes; they are not a sandbox and do not prove that a future native runtime is safe. Filesystem race conditions and platform-specific behavior still require review and OS-level isolation.
 
 ## Deployment requirements before accepting untrusted programs
 
@@ -47,6 +51,8 @@ These checks reduce accidental or simple link-based escapes. They do not make a 
 - The hosting process adapter has an in-memory registry and does not persist jobs or recover them after the provider control plane restarts. It is not a complete hosting service.
 - The bot integrations are first-version text-message handlers. They do not implement Discord slash commands/interactions, reactions, attachments, voice, or Telegram webhooks. Discord message content requires the privileged intent to be enabled for the application.
 - The native backend emits C and relies on an external C compiler. Native output is machine code after compilation and must be treated as executable code.
+- The cross-platform project manifest is not a native build system. No Android/iOS/desktop package generation, native UI bridge, graphics/audio/input engine, signing, or store publishing is implemented in 1.4.0.
+- A capability declaration is metadata until a runtime enforces it at every OS boundary. Do not treat manifest permissions as enforced isolation.
 - A Rust backend and a Go backend are not implemented in this release. Do not assume Rust or Go compilation, binary compatibility, or equivalent security properties.
 - The discord_bot.plain and telegram_bot.plain examples require the matching app token. Discord also requires the optional websockets dependency and an enabled Message Content Intent.
 - A separate process and reduced environment are not equivalent to OS isolation. The provider adapter alone is not safe for running untrusted customer code.
