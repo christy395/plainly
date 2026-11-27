@@ -495,6 +495,19 @@ Store tokens in environment secrets, never in source code:
 
 The current integrations handle ordinary text messages and text replies. They do not yet implement slash commands, interactions, reactions, attachments, voice, or Telegram webhooks. Read [HOSTING.md](HOSTING.md) before deploying bots.
 
+## Running Plainly across devices and operating systems
+
+Plainly is designed to keep its **.plain source files portable**. The current command-line interpreter runs on desktop operating systems that support Python 3.8 or newer. GitHub Actions now checks the interpreter and its regression suites on Windows, macOS, and Linux.
+
+| Environment | Current status |
+|---|---|
+| Windows, macOS, Linux desktop | Command-line runtime supported when Python 3.8+ is installed; covered by CI |
+| Android and iOS devices | The browser editor can be used in a compatible mobile browser; a standalone mobile runtime and installable native app packages are not available yet |
+| Native executables | Build separately for each target operating system and CPU architecture with a compatible C compiler; a compiled executable is not universally portable |
+| Other operating systems and CPU architectures | Not yet comprehensively tested; support must be verified on the target |
+
+“Cross-platform” does not mean that one native executable runs everywhere. Plainly source code is the portable part; the runtime, browser capabilities, compiler toolchain, and target platform still matter. Mobile browsers and every CPU architecture are not currently covered by automated device testing.
+
 ## Cross-platform apps and games
 
 Plainly 1.4.0 introduces a shared project format and starter-project workflow:
@@ -587,7 +600,8 @@ python3 plainly.py native speed.plain
 The native output is a platform-specific executable containing machine code. Plainly does not ask you to write raw binary instructions. It translates the Plainly program into C and lets GCC, Clang, or another compatible C compiler generate the executable.
 
 The native backend currently supports numbers, text, yes/no values, number lists, functions, and control-flow statements. It does not currently support file access, records, maybe values, or the web-server feature. The native output must be treated as executable code and run only with the same isolation precautions as any other program.
-\n
+
+
 ## Commands
 
 | Command | Purpose |
@@ -688,8 +702,16 @@ This release does not include Rust or Go compiler backends. The existing native 
 - [x] Local mock-based integration tests for bot and hosting behavior.
 - [x] Discord Gateway heartbeat scheduling, acknowledgement checks, reconnect handling, and safe mention defaults.
 - [x] Cross-platform app/game project manifest, secure-default capability policy, scaffolding, and validation for five target families.
+- [x] Automated interpreter regression coverage on Windows, macOS, and Linux, with matching browser and native-build checks.
 
-### Security hardening completed in 1.5.0\n\n- [x] Validate execution budgets and enforce a hard upper bound on core interpreter steps.\n- [x] Cap declared variables, aggregate runtime values, retained text, collection sizes, and cumulative output.\n- [x] Use bounded descriptor-based source reads, regular-file checks, strict UTF-8 decoding, and no-follow opens where supported.\n- [ ] Add a separately maintained threat model, fuzzing corpus, property-based parser tests, and independent security review.\n\n### Planned work
+### Security hardening completed in 1.5.0
+
+- [x] Validate execution budgets and enforce a hard upper bound on core interpreter steps.
+- [x] Cap declared variables, aggregate runtime values, retained text, collection sizes, and cumulative output.
+- [x] Use bounded descriptor-based source reads, regular-file checks, strict UTF-8 decoding, and no-follow opens where supported.
+- [ ] Add a separately maintained threat model, fuzzing corpus, property-based parser tests, and independent security review.
+
+### Planned work
 
 - [ ] Build a compiler and versioned Plainly-owned bytecode format directly from the independent AST; remove Python AST and generated-Python dependencies from the primary execution path.
 - [ ] Add static type checking, functions, records, modules, packages, error handling, and a versioned standard library to the independent core.
