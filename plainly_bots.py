@@ -116,7 +116,7 @@ def _discord_request(api, token, channel_id, text):
     )
 
 
-def _discord_session(token, handler, api, gateway):
+def _discord_session(token, handler, api, gateway, stop_event=None):
     try:
         from websockets.sync.client import connect
     except ImportError:
@@ -154,6 +154,8 @@ def _discord_session(token, handler, api, gateway):
         heartbeat_acknowledged = True
         self_user_id = None
         while True:
+            if stop_event is not None and stop_event.is_set():
+                return
             now = time.monotonic()
             if now >= next_heartbeat:
                 if not heartbeat_acknowledged:
@@ -162,10 +164,14 @@ def _discord_session(token, handler, api, gateway):
                 heartbeat_acknowledged = False
                 next_heartbeat = time.monotonic() + heartbeat_interval
 
-            timeout = max(0.1, min(heartbeat_interval, next_heartbeat - time.monotonic()))
+            # Poll the stop event at least once per second so provider shutdowns
+            # do not wait for a long Discord heartbeat interval.
+            timeout = max(0.1, min(1.0, heartbeat_interval, next_heartbeat - time.monotonic()))
             try:
                 raw = ws.recv(timeout=timeout)
             except TimeoutError:
+                if stop_event is not None and stop_event.is_set():
+                    return
                 continue
             try:
                 packet = json.loads(raw)
@@ -237,7 +243,7 @@ def run_discord_bot(token, handler, stop_event=None):
     delay = 2
     while stop_event is None or not stop_event.is_set():
         try:
-            _discord_session(token, handler, api, gateway)
+            _discord_session(token, handler, api, gateway, stop_event)
             delay = 2
         except BotRuntimeError:
             raise
