@@ -23,6 +23,13 @@
 
 ## Unreleased
 
+- Add an independent AST-to-bytecode compiler for the Plainly core, with a bounded stack VM and a checksummed versioned `.core.pbc` container.
+- Add `core-compile` and `core-execute` CLI commands without using Python's AST module or generated Python code.
+- Add differential compiler/VM tests for arithmetic, conditions, loops, lists, built-ins, short-circuit logic, Unicode, malformed bytecode, tampering, and execution limits.
+- Harden bytecode validation against duplicate JSON keys, early HALT instructions, invalid jumps, malformed operands, and unsafe numeric values.
+- Extend the Windows, macOS, and Linux CI matrix to compile, test, and execute independent core bytecode samples.
+
+
 - Pin the separate cross-platform CI workflow to Ubuntu 24.04, Windows Server 2022, and macOS 15 so runner-image changes do not silently break Python compatibility jobs.
 - Avoid reverse-DNS lookups during HTTP server startup; the listener now uses its numeric bound address for server metadata, preventing macOS startup hangs without requiring DNS.
 - Make Discord bot shutdown responsive to provider stop events instead of waiting for a full Gateway heartbeat interval.
