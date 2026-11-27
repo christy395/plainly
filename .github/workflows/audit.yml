@@ -38,6 +38,10 @@ jobs:
         run: python core_tests.py
       - name: Run independent core bytecode regression tests
         run: python core_bytecode_tests.py
+      - name: Run deterministic core fuzz tests
+        run: python core_fuzz_tests.py
+      - name: Run core bytecode CLI tests
+        run: python core_bytecode_cli_tests.py
       - name: Run project manifest security tests
         run: python project_tests.py
       - name: Run bytecode regression tests
