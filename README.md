@@ -710,6 +710,7 @@ This release does not include Rust or Go compiler backends. The existing native 
 - [x] Dedicated core commands, documented grammar, execution limits, and regression tests for malformed source, Unicode, arithmetic errors, and runaway loops.
 - [x] Keep the 1.4 language implementation available as a compatibility path while the independent core grows to feature parity.
 - [x] Versioned binary .pbc format and a dedicated bytecode VM for the supported compute subset.
+- [x] Safe `at(list, position)` builtin for one-based list access, implemented consistently in both independent execution backends.
 - [x] Provider-controlled host, port, and Host-header allowlist for the small website server.
 - [x] Basic Discord and Telegram text-message bot integrations.
 - [x] A Python process adapter for provider-managed app lifecycle and logs.
