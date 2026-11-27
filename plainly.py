@@ -121,8 +121,11 @@ def _open_user_file(name, mode):
             raise PlainlyRuntimeError("symbolic links are not allowed for Plainly files")
         raise
     try:
-        if not stat.S_ISREG(os.fstat(fd).st_mode):
+        info = os.fstat(fd)
+        if not stat.S_ISREG(info.st_mode):
             raise PlainlyRuntimeError("Plainly can only use regular files")
+        if info.st_nlink != 1:
+            raise PlainlyRuntimeError("hard-linked files are not allowed for Plainly file access")
         return os.fdopen(fd, mode, encoding="utf-8")
     except BaseException:
         os.close(fd)
@@ -425,7 +428,7 @@ static const char *p_ask(void) { char *b = malloc(4096); if (!fgets(b, 4096, std
 
 # --------------------------------------------------------------- compiler
 NUM = re.compile(r"^\d+(\.\d+)?$")
-VERSION = "1.1.0"
+VERSION = "1.1.1"
 TEXT_SPAN = re.compile(r"\bthe\s+words\b.*?(?:\bend\s+words\b|$)", re.I)
 FORBIDDEN = set('_:"()[]{};')
 RESERVED = set("""be to of is and or not then do end plus minus times divided by modulo
