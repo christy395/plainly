@@ -2,6 +2,7 @@
 """Regression tests for public website configuration and provider process lifecycle."""
 import os
 import shutil
+import signal
 import socket
 import subprocess
 import sys
@@ -104,6 +105,11 @@ class HostingTests(unittest.TestCase):
         if (status, body) != (200, "ok"):
             diagnostics = []
             if sys.platform == "darwin" and process.poll() is None:
+                try:
+                    process.send_signal(signal.SIGUSR1)
+                    time.sleep(0.15)
+                except (OSError, ValueError) as exc:
+                    diagnostics.append("stack dump signal: %r" % exc)
                 for command in (
                     ["ps", "-o", "pid=,stat=,command=", "-p", str(process.pid)],
                     ["lsof", "-nP", "-a", "-p", str(process.pid), "-iTCP"],
