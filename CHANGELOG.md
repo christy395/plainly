@@ -23,6 +23,7 @@
 
 ## Unreleased
 
+- Use direct TCP loopback requests in hosting integration tests and capture macOS child-process/listener diagnostics on failure.
 - Improve cross-platform local hosting readiness checks with shorter retries, a longer startup allowance, unbuffered child output, and actionable failure diagnostics.
 - Make local HTTP integration tests bypass inherited proxy settings so loopback checks work consistently on macOS, Windows, and Linux.
 - Move macOS CI jobs from the retired `macos-14` runner to the supported `macos-15` runner.
