@@ -82,7 +82,7 @@ def tokenize(source):
     if size > MAX_SOURCE_BYTES:
         raise PlainlyCoreError("source is larger than the 1 MiB limit")
 
-    if source.count("\n") > MAX_SOURCE_LINES:
+    if source.count("\n") + source.count("\r") > MAX_SOURCE_LINES * 2:
         raise PlainlyCoreError("source contains too many lines")
     result = []
     token_count = 0
@@ -229,7 +229,7 @@ class ExpressionParser:
             child = self.expression(3, depth + 1)
             left = Expr("unary", "not", (child,), token.line)
         elif token.value == "-":
-            child = self.expression(7, depth + 1)
+            child = self.expression(6, depth + 1)
             left = Expr("unary", "-", (child,), token.line)
         elif token.value == "(":
             left = self.expression(0, depth + 1)
@@ -451,14 +451,13 @@ class Interpreter:
                 return self.checked_number(math.sqrt(number), expr.line)
             if value == "absolute" and len(args) == 1:
                 return self.checked_number(abs(self.checked_number(args[0], expr.line)), expr.line)
-            if value == "largest" and len(args) == 1 and isinstance(args[0], list) and args[0]:
+            if value in ("largest", "smallest") and len(args) == 1 and isinstance(args[0], list):
+                if not args[0]:
+                    raise PlainlyCoreError(value + " needs a non-empty list", expr.line)
                 if not all(_is_number(item) for item in args[0]):
-                    raise PlainlyCoreError("largest needs a list of numbers", expr.line)
-                return self.checked_number(max(args[0]), expr.line)
-            if value == "smallest" and len(args) == 1 and isinstance(args[0], list) and args[0]:
-                if not all(_is_number(item) for item in args[0]):
-                    raise PlainlyCoreError("smallest needs a list of numbers", expr.line)
-                return self.checked_number(min(args[0]), expr.line)
+                    raise PlainlyCoreError(value + " needs a list of numbers", expr.line)
+                result = max(args[0]) if value == "largest" else min(args[0])
+                return self.checked_number(result, expr.line)
             raise PlainlyCoreError("unknown function or wrong inputs for %r" % value, expr.line)
 
         left = self.evaluate(expr.children[0])
