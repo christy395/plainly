@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.4.0
+
+- Add secure-default cross-platform app/game project manifests for Android, iOS, Windows, Linux, and macOS target declarations.
+- Add `plainly init app|game NAME` project scaffolding and `plainly project-check` validation commands.
+- Reject duplicate manifest keys, unknown fields/capabilities/targets, unsafe entry paths, symlinked or hard-linked project inputs, and oversized project files.
+- Add project security regression tests and CI coverage.
+- Document that native mobile/desktop packaging and game engine APIs remain planned work, not shipped features.
+
+
 ## Unreleased
 
 - Correct Discord Gateway heartbeat timing and require heartbeat acknowledgements before the next scheduled heartbeat.
