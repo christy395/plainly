@@ -20,6 +20,7 @@ MAX_STEPS = 100000
 MAX_REPEAT = 100000
 MAX_COLLECTION_ITEMS = 10000
 MAX_TEXT_LENGTH = 1024 * 1024
+MAX_OUTPUT_BYTES = 1024 * 1024
 MAX_NUMBER_MAGNITUDE = 1e100
 
 _TOKEN = re.compile(
@@ -124,7 +125,11 @@ def tokenize(source):
                     decoded = json.loads(value)
                 except (ValueError, TypeError):
                     raise PlainlyCoreError("invalid string escape", line_no)
-                if len(decoded) > MAX_TEXT_LENGTH:
+                try:
+                    decoded_size = len(decoded.encode("utf-8"))
+                except UnicodeEncodeError:
+                    raise PlainlyCoreError("string contains invalid Unicode", line_no)
+                if decoded_size > MAX_TEXT_LENGTH:
                     raise PlainlyCoreError("text value is too large", line_no)
                 line_tokens.append(Token(decoded, "string", line_no))
             else:
@@ -398,6 +403,7 @@ class Interpreter:
     def __init__(self, output=None, max_steps=MAX_STEPS):
         self.variables = {}
         self.output = output if output is not None else []
+        self.output_bytes = 0
         self.steps = max_steps
 
     def tick(self, line):
@@ -470,7 +476,7 @@ class Interpreter:
         if value in ("+", "-", "*", "/", "//", "%", "**"):
             if value == "+" and isinstance(left, str) and isinstance(right, str):
                 result = left + right
-                if len(result) > MAX_TEXT_LENGTH:
+                if len(result.encode("utf-8")) > MAX_TEXT_LENGTH:
                     raise PlainlyCoreError("text result is too large", expr.line)
                 return result
             a = self.checked_number(left, expr.line)
@@ -529,8 +535,10 @@ class Interpreter:
                 self.variables[statement.value] = self.evaluate(statement.expression)
             elif kind == "say":
                 value = _show(self.evaluate(statement.expression))
-                if len(value) > MAX_TEXT_LENGTH:
-                    raise PlainlyCoreError("output is too large", statement.line)
+                output_size = len(value.encode("utf-8")) + 1
+                if output_size > MAX_OUTPUT_BYTES - self.output_bytes:
+                    raise PlainlyCoreError("program output exceeded the 1 MiB limit", statement.line)
+                self.output_bytes += output_size
                 self.output.append(value)
             elif kind == "if":
                 condition = self._boolean(self.evaluate(statement.expression), statement.line)
@@ -543,6 +551,7 @@ class Interpreter:
                 if not _is_number(count) or int(count) != count or count < 0 or count > MAX_REPEAT:
                     raise PlainlyCoreError("repeat needs a whole number from 0 to %d" % MAX_REPEAT, statement.line)
                 for _ in range(int(count)):
+                    self.tick(statement.line)
                     self.execute_block(statement.body)
             else:
                 raise PlainlyCoreError("unsupported statement", statement.line)
