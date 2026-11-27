@@ -1,0 +1,59 @@
+name: Plainly audit regression checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  python:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.8", "3.11", "3.13"]
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Compile interpreter
+        run: python -m py_compile plainly.py
+      - name: Run audit regression tests
+        run: python audit_tests.py
+      - name: Check and run the first example
+        run: |
+          python plainly.py check hello.plain
+          python plainly.py run hello.plain
+
+  browser:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Run browser regression tests
+        run: node web_test.js
+
+  native:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Build native test program
+        run: |
+          python plainly.py native speed.plain
+          ./speed
