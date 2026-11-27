@@ -1859,13 +1859,14 @@ def main(argv):
     if len(argv) == 3 and argv[1] in ("core-compile", "core-execute"):
         try:
             from plainly_core_bytecode import CoreBytecodeError, compile_file as core_compile_file, run_file as core_execute_file
+            from plainly_core import PlainlyCoreError
             if argv[1] == "core-compile":
                 output = core_compile_file(argv[2])
                 print("Compiled %s to %s (independent Plainly core bytecode v1)." % (argv[2], output))
             else:
                 sys.stdout.write(core_execute_file(argv[2]))
             return 0
-        except (CoreBytecodeError, PlainlyRuntimeError, OSError) as exc:
+        except (CoreBytecodeError, PlainlyCoreError, PlainlyRuntimeError, OSError) as exc:
             print("Plainly core bytecode error: %s" % exc, file=sys.stderr)
             return 1
     if len(argv) >= 2 and argv[1] in ("core-check", "core-run"):
