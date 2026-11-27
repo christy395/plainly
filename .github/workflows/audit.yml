@@ -23,12 +23,18 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Compile interpreter and bytecode VM
-        run: python -m py_compile plainly.py plainly_bytecode.py
+      - name: Install optional bot runtime
+        run: python -m pip install "websockets>=12,<14"
+      - name: Compile interpreter, bytecode, bot and host modules
+        run: python -m py_compile plainly.py plainly_bytecode.py plainly_bots.py plainly_host.py
       - name: Run audit regression tests
         run: python audit_tests.py
       - name: Run bytecode regression tests
         run: python bytecode_tests.py
+      - name: Run mocked Discord and Telegram integration tests
+        run: python bot_tests.py
+      - name: Run hosted website and provider adapter tests
+        run: python hosting_tests.py
       - name: Compile and execute a bytecode example
         run: |
           python plainly.py compile hello.plain
