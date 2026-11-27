@@ -1,0 +1,95 @@
+import unittest
+
+import plainly_core as core
+
+
+class PlainlyCoreTests(unittest.TestCase):
+    def test_own_interpreter_arithmetic_and_output(self):
+        source = 'let total be 6 plus 4 times 2\nsay total\n'
+        self.assertEqual(core.run_source(source), "14\n")
+
+    def test_english_comparisons_and_branches(self):
+        source = (
+            "let points be 8\n"
+            "if points is at least 5 then\n"
+            "say \"passed\"\n"
+            "otherwise\n"
+            "say \"failed\"\n"
+            "end if\n"
+        )
+        self.assertEqual(core.run_source(source), "passed\n")
+
+    def test_while_loop_and_assignment(self):
+        source = (
+            "let n be 0\n"
+            "while n is less than 3 do\n"
+            "set n to n plus 1\n"
+            "end while\n"
+            "say n\n"
+        )
+        self.assertEqual(core.run_source(source), "3\n")
+
+    def test_repeat_loop(self):
+        source = "repeat 3 times do\nsay \"go\"\nend repeat\n"
+        self.assertEqual(core.run_source(source), "go\ngo\ngo\n")
+
+    def test_list_and_builtins(self):
+        source = "let values be [3, 8, 2]\nsay length(values)\nsay largest(values)\nsay smallest(values)\n"
+        self.assertEqual(core.run_source(source), "3\n8\n2\n")
+
+    def test_short_circuit_does_not_evaluate_right_side(self):
+        source = "say no and missing_name\nsay yes or missing_name\n"
+        self.assertEqual(core.run_source(source), "no\nyes\n")
+
+    def test_zero_division_is_reported(self):
+        with self.assertRaisesRegex(core.PlainlyCoreError, "division by zero"):
+            core.run_source("say 5 divided by 0\n")
+
+    def test_unknown_names_are_reported(self):
+        with self.assertRaisesRegex(core.PlainlyCoreError, "unknown name"):
+            core.run_source("say missing\n")
+
+    def test_invalid_block_is_reported(self):
+        with self.assertRaisesRegex(core.PlainlyCoreError, "needs 'end if'"):
+            core.check_source("if yes then\nsay \"x\"\n")
+
+    def test_wrong_condition_type_is_reported(self):
+        with self.assertRaisesRegex(core.PlainlyCoreError, "yes/no"):
+            core.run_source("if 1 then\nsay \"x\"\nend if\n")
+
+    def test_infinite_loop_hits_step_limit(self):
+        with self.assertRaisesRegex(core.PlainlyCoreError, "step limit"):
+            core.run_source("while yes do\nsay \"x\"\nend while\n", max_steps=30)
+
+    def test_repeat_limit_is_enforced(self):
+        with self.assertRaisesRegex(core.PlainlyCoreError, "repeat needs"):
+            core.run_source("repeat 100001 times do\nsay \"x\"\nend repeat\n")
+
+    def test_text_limit_is_enforced(self):
+        huge = "a" * (core.MAX_TEXT_LENGTH + 1)
+        source = 'say "' + huge + '"\n'
+        with self.assertRaisesRegex(core.PlainlyCoreError, "text value is too large|source is larger"):
+            core.run_source(source)
+
+    def test_token_limit_is_enforced(self):
+        source = "say 1\n" * (core.MAX_TOKENS // 2 + 1)
+        with self.assertRaisesRegex(core.PlainlyCoreError, "too many tokens"):
+            core.check_source(source)
+
+    def test_boolean_is_not_a_number(self):
+        with self.assertRaisesRegex(core.PlainlyCoreError, "needs numbers"):
+            core.run_source("say yes plus 1\n")
+
+    def test_parentheses_and_precedence(self):
+        self.assertEqual(core.run_source("say (2 plus 3) times 4\n"), "20\n")
+
+    def test_english_greater_than(self):
+        self.assertEqual(core.run_source("say 9 is greater than 4\n"), "yes\n")
+
+    def test_unknown_function_is_reported(self):
+        with self.assertRaisesRegex(core.PlainlyCoreError, "unknown function"):
+            core.run_source("say do_something(1)\n")
+
+
+if __name__ == "__main__":
+    unittest.main()
