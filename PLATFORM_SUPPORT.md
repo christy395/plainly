@@ -57,3 +57,9 @@ A target declaration means the project intends to support that platform. It does
 ## Current security boundary
 
 The project manifest validator rejects malformed or unsafe project metadata and defaults to no capabilities and denied networking. It is not a sandbox, does not yet mediate native APIs, and does not make generated executables safe to run. Do not run untrusted projects on a machine containing secrets. Do not describe Plainly as unhackable or independently certified.
+
+## Runtime portability checks
+
+The command-line interpreter is intended for desktop systems that can run Python 3.8 or newer. Automated CI exercises supported Python versions on Windows, macOS, and Linux, and builds and runs the native sample with GCC/Clang-compatible toolchains on those three operating systems. These checks do not certify every CPU architecture, distribution, browser, or device model.
+
+Plainly source files are portable text, but native executables are specific to their target operating system and CPU architecture. Android and iOS project target declarations are not mobile app runtimes: mobile browser access to the browser editor is distinct from installing a native Plainly application. Native mobile packaging remains unimplemented.
