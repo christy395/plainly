@@ -144,7 +144,7 @@ The main types are:
 |---|---|---|
 | `number` | A whole or decimal number | `let score be 42` |
 | `text` | A piece of text | `let player be the words Alex` |
-| `truth` | Yes or no | `let is ready be yes` |
+| `truth` | Yes or no | `let is ready be true` |
 | `a list of number` | A list of numbers | `let scores be a list of 4 and 8 and 15` |
 | `maybe number` | A number that may not exist | `let result be parsed number of the words 42 end words` |
 | record type | A value with named fields | See [Records](#records). |
