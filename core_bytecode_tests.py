@@ -34,6 +34,22 @@ class CoreBytecodeTests(unittest.TestCase):
             "3\n8\n2\n9\n",
         )
 
+    def test_at_list_builtin(self):
+        self.assertBothBackends(
+            'let names be ["Ada", "Linus", "Grace"]\nsay at(names, 1)\nsay at(names, 3)\n',
+            "Ada\nGrace\n",
+        )
+
+    def test_at_rejects_invalid_positions(self):
+        for source, message in (
+            ("say at([1, 2], 0)\n", "outside the list"),
+            ("say at([1, 2], 3)\n", "outside the list"),
+            ("say at([1, 2], 1.5)\n", "whole-number"),
+        ):
+            with self.subTest(source=source):
+                with self.assertRaisesRegex(core.PlainlyCoreError, message):
+                    bytecode.run_source(source)
+
     def test_short_circuit_and(self):
         self.assertBothBackends("say no and missing_name\nsay yes and yes\n", "no\nyes\n")
 
