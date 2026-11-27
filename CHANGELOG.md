@@ -23,6 +23,7 @@
 
 ## Unreleased
 
+- Make local HTTP integration tests bypass inherited proxy settings so loopback checks work consistently on macOS, Windows, and Linux.
 - Move macOS CI jobs from the retired `macos-14` runner to the supported `macos-15` runner.
 - Extend automated compatibility checks across Windows, macOS, and Linux for supported Python versions and the browser test suite.
 - Build and run the native sample with GCC/Clang-compatible toolchains on Windows, macOS, and Linux.
