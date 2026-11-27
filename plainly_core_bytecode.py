@@ -168,10 +168,15 @@ def _validate_program(program):
                 raise CoreBytecodeError("invalid variable name in bytecode")
         if op == "CONST":
             value = item[1]
-            if not (value is None or type(value) in (bool, int, float, str)):
+            if type(value) not in (bool, int, float, str):
                 raise CoreBytecodeError("invalid constant type")
-            if isinstance(value, str) and len(value.encode("utf-8")) > core.MAX_TEXT_LENGTH:
-                raise CoreBytecodeError("bytecode text constant is too large")
+            if isinstance(value, str):
+                try:
+                    text_size = len(value.encode("utf-8"))
+                except UnicodeEncodeError:
+                    raise CoreBytecodeError("bytecode contains invalid Unicode text") from None
+                if text_size > core.MAX_TEXT_LENGTH:
+                    raise CoreBytecodeError("bytecode text constant is too large")
             if isinstance(value, (int, float)) and not isinstance(value, bool):
                 try:
                     if not math.isfinite(float(value)) or abs(value) > core.MAX_NUMBER_MAGNITUDE:
