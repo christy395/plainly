@@ -23,6 +23,7 @@
 
 ## Unreleased
 
+- Add opt-in server startup diagnostics to help troubleshoot platform-specific listener startup issues.
 - Correct HTTP CRLF framing in the cross-platform hosting integration test and make server access logging safe for malformed requests.
 - Use direct TCP loopback requests in hosting integration tests and capture macOS child-process/listener diagnostics on failure.
 - Improve cross-platform local hosting readiness checks with shorter retries, a longer startup allowance, unbuffered child output, and actionable failure diagnostics.
