@@ -408,7 +408,7 @@ def _server_debug(message):
 def _serve(port):
     config = _SERVER_CONFIG
     configured_port = config.get("port") or os.environ.get("PORT") or port
-    if os.environ.get("PLAINLY_DEBUG_SERVER") == "1" and hasattr(signal, "SIGUSR1"):
+    if os.environ.get("PLAINLY_DEBUG_SERVER") == "1":
         import faulthandler
         import signal
         faulthandler.register(signal.SIGUSR1, file=sys.stderr, all_threads=True)
