@@ -217,9 +217,11 @@ def run_discord_bot(token, handler, stop_event=None):
         except BotRuntimeError:
             raise
         except Exception as exc:
-            # Keep credentials and endpoint URLs out of console logs.
+            # Never print the bot token or the platform API URL.
             name = type(exc).__name__
-            print("Plainly Discord connection ended (%s); reconnecting." % name)
+            detail = str(exc).replace(token, "[redacted]") if token else str(exc)
+            print("Plainly Discord connection ended (%s: %s); reconnecting." %
+                  (name, detail[:240]), file=__import__("sys").stderr, flush=True)
         if stop_event is not None and stop_event.wait(delay):
             break
         time.sleep(0 if stop_event is not None else delay)
