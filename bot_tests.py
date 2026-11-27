@@ -161,6 +161,20 @@ class BotIntegrationTests(unittest.TestCase):
             process.terminate()
             process.wait(timeout=4)
 
+    def test_discord_stop_event_is_respected_before_connecting(self):
+        import threading
+        import plainly_bots
+
+        stopped = threading.Event()
+        stopped.set()
+        # A set stop event must return before importing or opening a websocket.
+        self.assertIsNone(plainly_bots._discord_session(
+            "TESTTOKEN", lambda event, reply: None,
+            "https://discord.com/api/v10",
+            "wss://gateway.discord.gg/?v=10&encoding=json",
+            stopped,
+        ))
+
     def test_bot_commands_require_explicit_permissions_and_handlers(self):
         no_permission = subprocess.run(
             [sys.executable, PLAINLY, "check", self.write_program(
