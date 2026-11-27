@@ -195,6 +195,8 @@ def _validate_program(program):
             raise CoreBytecodeError("invalid source line metadata")
     if code[-1][0] != "HALT":
         raise CoreBytecodeError("bytecode program has no final HALT")
+    if any(item[0] == "HALT" for item in code[:-1]):
+        raise CoreBytecodeError("bytecode contains an early HALT instruction")
     return program
 
 
@@ -207,6 +209,15 @@ def dumps(program):
     if len(payload) > MAX_BLOB:
         raise CoreBytecodeError("compiled program is too large")
     return MAGIC + struct.pack(">HI", VERSION, len(payload)) + hashlib.sha256(payload).digest() + payload
+
+
+def _unique_object(pairs):
+    result = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError("duplicate JSON object key")
+        result[key] = value
+    return result
 
 
 def loads(blob):
@@ -223,7 +234,7 @@ def loads(blob):
     if not hashlib.sha256(payload).digest() == digest:
         raise CoreBytecodeError("bytecode checksum mismatch")
     try:
-        program = json.loads(payload.decode("utf-8"))
+        program = json.loads(payload.decode("utf-8"), object_pairs_hook=_unique_object)
     except (UnicodeDecodeError, ValueError):
         raise CoreBytecodeError("bytecode payload is not valid UTF-8 JSON") from None
     return _validate_program(program)
@@ -354,7 +365,8 @@ class VirtualMachine:
                     if not isinstance(value, bool): raise core.PlainlyCoreError("'not' needs a yes/no value", line)
                     self.push(not value, line)
                 else:
-                    self.push(core.Interpreter().checked_number(-value, line), line)
+                    number = core.Interpreter().checked_number(value, line)
+                    self.push(core.Interpreter().checked_number(-number, line), line)
             elif op == "BINARY":
                 right, left = self.pop(line), self.pop(line)
                 self.push(self.binary(item[1], left, right, line), line)
