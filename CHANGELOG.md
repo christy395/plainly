@@ -23,6 +23,11 @@
 
 ## Unreleased
 
+- Extend automated compatibility checks across Windows, macOS, and Linux for supported Python versions and the browser test suite.
+- Build and run the native sample with GCC/Clang-compatible toolchains on Windows, macOS, and Linux.
+- Add the Windows `.exe` suffix to native output names and improve the PowerShell run hint.
+- Repair malformed Markdown line breaks in the 1.5.0 security, language specification, README, and changelog sections.
+
 - Correct Discord Gateway heartbeat timing and require heartbeat acknowledgements before the next scheduled heartbeat.
 - Reconnect when Discord requests a new Gateway session and disable automatic mention parsing in bot replies.
 - Extend mocked integration coverage for the safe Discord message payload.
