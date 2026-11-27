@@ -6,6 +6,8 @@ Usage:
     python3 plainly.py native program.plain   check, then compile to a fast native program
     python3 plainly.py compile program.plain  compile to a binary .pbc bytecode file
     python3 plainly.py execute program.pbc     execute a binary .pbc bytecode file
+    python3 plainly.py init app|game NAME      create a cross-platform project
+    python3 plainly.py project-check [FOLDER]  validate a project and its entry file
     python3 plainly.py check  program.plain   check only
     python3 plainly.py build  program.plain   show the generated Python
     python3 plainly.py c      program.plain   show the generated C
@@ -529,7 +531,7 @@ static const char *p_ask(void) { char *b = malloc(4096); if (!fgets(b, 4096, std
 
 # --------------------------------------------------------------- compiler
 NUM = re.compile(r"^\d+(\.\d+)?$")
-VERSION = "1.3.0"
+VERSION = "1.4.0"
 TEXT_SPAN = re.compile(r"\bthe\s+words\b.*?(?:\bend\s+words\b|$)", re.I)
 FORBIDDEN = set('_:"()[]{};')
 RESERVED = set("""be to of is and or not then do end plus minus times divided by modulo
@@ -1812,6 +1814,36 @@ def fix_file(path, src):
 
 
 def main(argv):
+    if len(argv) >= 2 and argv[1] == "init":
+        if len(argv) not in (4, 5):
+            print("Usage: plainly init app|game NAME [PARENT_FOLDER]", file=sys.stderr)
+            return 2
+        try:
+            from plainly_project import ProjectError, create_project
+            folder = create_project(argv[3], argv[2], argv[4] if len(argv) == 5 else ".")
+            print("Created Plainly %s project: %s" % (argv[2], folder))
+            print("Next: plainly project-check %s" % folder)
+            print("Native platform packaging is not implemented yet; see PLATFORM_SUPPORT.md.")
+            return 0
+        except (ProjectError, OSError) as exc:
+            print("Plainly project error: %s" % exc, file=sys.stderr)
+            return 1
+    if len(argv) in (2, 3) and argv[1] == "project-check":
+        try:
+            from plainly_project import ProjectError, check_project
+            manifest = check_project(argv[2] if len(argv) == 3 else ".")
+            print("Project is valid: %s (%s)" % (manifest["name"], manifest["kind"]))
+            print("Targets: %s" % ", ".join(manifest["targets"]))
+            print("Security defaults: capabilities=%s, network=%s, filesystem=%s, native_extensions=%s" % (
+                ", ".join(manifest["security"]["capabilities"]) or "none",
+                manifest["security"]["network"],
+                manifest["security"]["filesystem"],
+                manifest["security"]["native_extensions"],
+            ))
+            return 0
+        except (ProjectError, OSError) as exc:
+            print("Plainly project error: %s" % exc, file=sys.stderr)
+            return 1
     if len(argv) == 2 and argv[1] in ("--version", "version"):
         print("Plainly " + VERSION)
         return 0
