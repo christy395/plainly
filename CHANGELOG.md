@@ -23,6 +23,7 @@
 
 ## Unreleased
 
+- Move macOS CI jobs from the retired `macos-14` runner to the supported `macos-15` runner.
 - Extend automated compatibility checks across Windows, macOS, and Linux for supported Python versions and the browser test suite.
 - Build and run the native sample with GCC/Clang-compatible toolchains on Windows, macOS, and Linux.
 - Add the Windows `.exe` suffix to native output names and improve the PowerShell run hint.
