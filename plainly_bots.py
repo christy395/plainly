@@ -124,7 +124,7 @@ def _discord_session(token, handler, api, gateway):
             "Discord bots need the optional dependency; install Plainly with: pip install plainly-lang[bots]"
         ) from None
 
-    with connect(gateway, open_timeout=15, close_timeout=5, ping_interval=None, max_size=2 * 1024 * 1024) as ws:
+    with connect(gateway, open_timeout=15, close_timeout=5, max_size=2 * 1024 * 1024) as ws:
         try:
             hello = json.loads(ws.recv(timeout=20))
         except (ValueError, TimeoutError):
