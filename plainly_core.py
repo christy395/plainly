@@ -473,6 +473,13 @@ class Interpreter:
             args = [self.evaluate(item) for item in expr.children]
             if value == "length" and len(args) == 1 and isinstance(args[0], (str, list)):
                 return len(args[0])
+            if value == "at" and len(args) == 2 and isinstance(args[0], list):
+                index = self.checked_number(args[1], expr.line)
+                if int(index) != index:
+                    raise PlainlyCoreError("at needs a whole-number position", expr.line)
+                if index < 1 or index > len(args[0]):
+                    raise PlainlyCoreError("list position is outside the list", expr.line)
+                return args[0][int(index) - 1]
             if value == "sqrt" and len(args) == 1:
                 number = self.checked_number(args[0], expr.line)
                 if number < 0:
