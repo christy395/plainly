@@ -548,9 +548,9 @@ The adapter manages child processes; it does not supply customer accounts, billi
 
 ## Browser editor
 
-Open `plainly-web.html` in a modern browser. It includes lessons, a code editor, a Run button, and interactive page examples.
+Open `plainly-web.html` in a modern browser. It includes a beginner start panel with one-click starters for a first program, website, interactive app, chatbot, and coding challenge. Search lessons and examples, insert common Plainly patterns with one tap, edit the code, and press **Run**. The editor also includes a guided quick-reference for messages, variables, choices, and loops. Your code is saved in the current browser when local storage is available.
 
-The browser editor runs a smaller subset than the Python interpreter. It does not support file access, persistent memory, records, maybe values, or the Python web-server feature. Browser programs cannot access local files or make arbitrary network requests.
+The browser editor runs a smaller subset than the Python interpreter. It does not support file access, persistent memory, records, maybe values, or the Python web-server feature. Browser programs cannot access local files or make arbitrary network requests. The starter buttons and quick-reference are learning aids; they do not expand the browser runtime's supported language features.
 
 ## Binary bytecode (.pbc)
 
@@ -740,7 +740,7 @@ This release does not include Rust or Go compiler backends. The existing native 
 - [x] Add differential tests comparing independent interpreter and VM behavior, plus malformed/tampered bytecode and execution-budget tests.
 - [ ] Add static type checking, functions, records, modules, packages, error handling, and a versioned standard library to the independent core.
 - [ ] Create a browser compilation target using WebAssembly, with Plainly-owned browser APIs and no user-authored JavaScript requirement.
-- [ ] Build Plainly's frontend system for page structure, styling, browser events, accessibility, and component composition.
+- [ ] Build Plainly's full frontend system for page structure, styling, browser events, accessibility, and component composition. The browser editor now has beginner starters, searchable lessons, and insertable syntax examples.
 - [ ] Add a backend and web application framework with HTTP routing, database drivers, authentication primitives, and safe secret handling.
 - [ ] Build a package manager, project/build tooling, formatter, debugger, language server, and cross-platform test harness for Plainly projects.
 - [ ] Migrate the full legacy language feature set to the independent implementation, then retire the generated-Python execution path.
