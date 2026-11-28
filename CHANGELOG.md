@@ -23,6 +23,10 @@
 
 ## Unreleased
 
+- Allow up to six words in independent-core variable names, bringing its naming style closer to the existing Plainly language.
+- Add `show`, `display`, and `print` as aliases for the independent core's `say` output statement.
+- Extend interpreter and bytecode regression coverage for multi-word names and output aliases.
+
 - Run deterministic core fuzz cases and independent core bytecode CLI regression tests in the full Windows/macOS/Linux audit matrix.
 - Add the independent core AST-to-bytecode VM module and its differential, malformed-file, and execution-budget tests to the full cross-platform audit workflow and documented local test commands.
 - Add an independent AST-to-bytecode compiler for the Plainly core, with a bounded stack VM and a checksummed versioned `.core.pbc` container.
