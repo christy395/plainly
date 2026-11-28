@@ -23,6 +23,9 @@
 
 ## Unreleased
 
+- Make beginner editor helper setup tolerate lightweight DOM environments without optional selector APIs.
+- Correct the existing bytecode list-access test's expected newline characters.
+
 - Correct an accidental literal newline in the browser editor script so its regression check can parse the page.
 - Correct newline escaping in the new independent-core regression tests.
 
