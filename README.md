@@ -34,6 +34,7 @@ end if
 - [Cross-platform apps and games](#cross-platform-apps-and-games)
 - [Hosting provider integration](#hosting-provider-integration)
 - [Browser editor](#browser-editor)
+- [Enzonic Cloud IDE](#enzonic-cloud-ide)
 - [Native executable and machine code](#native-executable-and-machine-code)
 - [Commands](#commands)
 - [Examples in this repository](#examples-in-this-repository)
@@ -552,6 +553,12 @@ Open `plainly-web.html` in a modern browser. It includes a beginner start panel 
 
 The browser editor runs a smaller subset than the Python interpreter. It does not support file access, persistent memory, records, maybe values, or the Python web-server feature. Browser programs cannot access local files or make arbitrary network requests. The starter buttons and quick-reference are learning aids; they do not expand the browser runtime's supported language features.
 
+## Enzonic Cloud IDE
+
+Enzonic Cloud provides a hosted Plainly IDE at [plainly.labs.enzonic.com/ide](https://plainly.labs.enzonic.com/ide). The IDE can be opened in a browser and, as shown in the available demonstration, includes a Plainly code editor, a Run action, an output area, learning materials, example programs, and light/dark appearance options. This gives users another way to explore Plainly without starting with a local command-line setup.
+
+The hosted IDE is an Enzonic Cloud service; its availability and runtime capabilities are controlled by that platform. Seeing an example in the editor does not guarantee that every runtime integration is supported by the hosted runner. In particular, the Discord bot example produced an error in the demonstration, so hosted Discord bot execution should be treated as unverified until Enzonic confirms and tests that capability. The hosted IDE should not be described as an exact deployment of this repository's `plainly-web.html` editor unless the implementation is confirmed by Enzonic.
+
 ## Binary bytecode (.pbc)
 
 Plainly can compile supported programs into a versioned binary bytecode file and run them in its own virtual machine. This is separate from the existing `native` command: bytecode runs in the Plainly VM and does not require a C compiler.
@@ -717,6 +724,7 @@ This release does not include Rust or Go compiler backends. The existing native 
 - [x] Local mock-based integration tests for bot and hosting behavior.
 - [x] Discord Gateway heartbeat scheduling, acknowledgement checks, reconnect handling, and safe mention defaults.
 - [x] Responsive browser editor viewport support for mobile browsers and graceful local-storage failure handling.
+- [x] Document the Enzonic Cloud-hosted Plainly IDE and its currently observed capabilities, while distinguishing platform-provided features from verified language/runtime support.
 - [x] Cross-platform app/game project manifest, secure-default capability policy, scaffolding, and validation for five target families.
 - [x] GitHub Actions matrix for Python regression suites on Windows, macOS, and Linux, including the independent bytecode VM, plus a separate browser-editor test job.
 - [x] Cross-platform HTTP hosting integration checks use direct loopback TCP and tolerate malformed-request logging.
