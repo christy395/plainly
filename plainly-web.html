@@ -246,7 +246,7 @@ document.querySelectorAll("[data-insert]").forEach(button=>button.addEventListen
  try{localStorage.setItem("plainly-program",ed.value)}catch(e){}
  st.textContent="Example added. Change it or press Run.";
 }));
-\nfor(const k in EX){const o=document.createElement("option");o.textContent=k;sel.appendChild(o)}
+for(const k in EX){const o=document.createElement("option");o.textContent=k;sel.appendChild(o)}
 function load(k){ed.value=EX[k];out.className="out";out.textContent="Press Run to see what your program says.";st.textContent=""}
 sel.onchange=()=>load(sel.value);
 function render(r){const pg=$("pg");pg.textContent="";pg.className="pg"+(r.els.length?" on":"");
