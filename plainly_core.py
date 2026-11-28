@@ -24,6 +24,8 @@ MAX_OUTPUT_BYTES = 1024 * 1024
 MAX_VARIABLES = 10000
 MAX_RUNTIME_VALUES = 100000
 MAX_NUMBER_MAGNITUDE = 1e100
+MAX_NAME_WORDS = 6
+MAX_NAME_LENGTH = 128
 
 _TOKEN = re.compile(
     r'\s*(?:(?P<number>(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+))'
@@ -72,6 +74,30 @@ class Statement:
 @dataclass(frozen=True)
 class Program:
     statements: tuple
+
+
+_NAME_WORD = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
+_RESERVED_NAME_WORDS = frozenset({
+    "and", "or", "not", "yes", "no", "true", "false",
+    "is", "equals", "equal", "plus", "minus", "times",
+    "divided", "by", "less", "greater", "at", "most", "least",
+    "be", "to", "then", "do", "otherwise", "end",
+    "let", "set", "say", "show", "display", "print",
+    "if", "while", "repeat", "note",
+})
+
+
+def is_valid_name(name):
+    """Return whether name is a safe, unambiguous Plainly variable name."""
+    if not isinstance(name, str) or not name or len(name) > MAX_NAME_LENGTH:
+        return False
+    parts = name.split(" ")
+    return (
+        1 <= len(parts) <= MAX_NAME_WORDS
+        and " ".join(parts) == name
+        and all(_NAME_WORD.fullmatch(part) and part.lower() not in _RESERVED_NAME_WORDS
+                for part in parts)
+    )
 
 
 def tokenize(source):
@@ -263,7 +289,24 @@ class ExpressionParser:
                             raise PlainlyCoreError("a function call may have at most 16 inputs", token.line)
                 left = Expr("call", word, tuple(args), token.line)
             else:
-                left = Expr("name", token.value, (), token.line)
+                # Combine adjacent ordinary words into one variable name.
+                # Operators and reserved words terminate the name.
+                name_parts = [token.value]
+                while self.current() and self.current().kind == "identifier":
+                    next_word = self.current().value.lower()
+                    next_operator, _ = self.operator()
+                    if next_operator is not None or next_word in _RESERVED_NAME_WORDS:
+                        break
+                    name_parts.append(self.take().value)
+                    if len(name_parts) > MAX_NAME_WORDS:
+                        raise PlainlyCoreError(
+                            "variable names can contain at most %d words" % MAX_NAME_WORDS,
+                            token.line,
+                        )
+                name = " ".join(name_parts)
+                if not is_valid_name(name):
+                    raise PlainlyCoreError("invalid variable name %r" % name, token.line)
+                left = Expr("name", name, (), token.line)
         else:
             raise PlainlyCoreError("expected a number, text, yes/no value, name, or '('", token.line)
 
@@ -326,14 +369,32 @@ class Parser:
             if first == "note":
                 continue
             if first == "let":
-                if len(tokens) < 4 or tokens[1].kind != "identifier" or words[2] != "be":
-                    raise PlainlyCoreError("use: let name be expression", line)
-                result.append(Statement("let", tokens[1].value, self.expression(tokens[3:]), (), (), line))
+                delimiter = next((i for i in range(1, len(tokens))
+                                  if tokens[i].kind == "identifier" and words[i] == "be"), None)
+                if delimiter is None or delimiter == 1:
+                    raise PlainlyCoreError(
+                        "use: let name be expression (names may contain up to %d words)" % MAX_NAME_WORDS,
+                        line,
+                    )
+                name_tokens = tokens[1:delimiter]
+                name = " ".join(token.value for token in name_tokens)
+                if any(token.kind != "identifier" for token in name_tokens) or not is_valid_name(name):
+                    raise PlainlyCoreError("invalid variable name; use up to %d ordinary words" % MAX_NAME_WORDS, line)
+                result.append(Statement("let", name, self.expression(tokens[delimiter + 1:]), (), (), line))
             elif first == "set":
-                if len(tokens) < 4 or tokens[1].kind != "identifier" or words[2] != "to":
-                    raise PlainlyCoreError("use: set name to expression", line)
-                result.append(Statement("set", tokens[1].value, self.expression(tokens[3:]), (), (), line))
-            elif first == "say":
+                delimiter = next((i for i in range(1, len(tokens))
+                                  if tokens[i].kind == "identifier" and words[i] == "to"), None)
+                if delimiter is None or delimiter == 1:
+                    raise PlainlyCoreError(
+                        "use: set name to expression (names may contain up to %d words)" % MAX_NAME_WORDS,
+                        line,
+                    )
+                name_tokens = tokens[1:delimiter]
+                name = " ".join(token.value for token in name_tokens)
+                if any(token.kind != "identifier" for token in name_tokens) or not is_valid_name(name):
+                    raise PlainlyCoreError("invalid variable name; use up to %d ordinary words" % MAX_NAME_WORDS, line)
+                result.append(Statement("set", name, self.expression(tokens[delimiter + 1:]), (), (), line))
+            elif first in ("say", "show", "display", "print"):
                 result.append(Statement("say", None, self.expression(tokens[1:]), (), (), line))
             elif first == "if":
                 if len(tokens) < 3 or words[-1] != "then":
