@@ -52,7 +52,7 @@ class CoreBytecodeTests(unittest.TestCase):
 say at(names, 1)
 say at(names, 3)
 """
-        self.assertBothBackends(source, "Ada\\nGrace\\n")
+        self.assertBothBackends(source, "Ada\nGrace\n")
 
     def test_at_rejects_invalid_positions(self):
         cases = (
