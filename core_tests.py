@@ -12,16 +12,16 @@ class PlainlyCoreTests(unittest.TestCase):
 
     def test_multi_word_variable_names_and_output_aliases(self):
         source = (
-            "let player score be 10\\n"
-            "set player score to player score plus 5\\n"
-            "show player score\\n"
-            'display "Finished"\\n'
+            "let player score be 10\n"
+            "set player score to player score plus 5\n"
+            "show player score\n"
+            'display "Finished"\n'
         )
-        self.assertEqual(core.run_source(source), "15\\nFinished\\n")
+        self.assertEqual(core.run_source(source), "15\nFinished\n")
 
     def test_variable_names_reject_reserved_words(self):
         with self.assertRaisesRegex(core.PlainlyCoreError, "invalid variable name"):
-            core.check_source("let score plus be 1\\nsay score plus\\n")
+            core.check_source("let score plus be 1\nsay score plus\n")
 
     def test_english_comparisons_and_branches(self):
         source = (
