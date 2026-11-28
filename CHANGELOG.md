@@ -23,6 +23,9 @@
 
 ## Unreleased
 
+- Correct an accidental literal newline in the browser editor script so its regression check can parse the page.
+- Correct newline escaping in the new independent-core regression tests.
+
 - Allow up to six words in independent-core variable names, bringing its naming style closer to the existing Plainly language.
 - Add `show`, `display`, and `print` as aliases for the independent core's `say` output statement.
 - Extend interpreter and bytecode regression coverage for multi-word names and output aliases.
