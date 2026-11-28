@@ -14,9 +14,9 @@ say "You are not a teenager"
 end if
 ```
 
-<sub>Current version: **1.5.0** · License: MIT · Status: early public release, preparing for independent security review</sub>
+<sub>Current version: **1.5.0** · License: MIT · Status: early public release · Enzonic Cloud security audit passed</sub>
 
-> **Security notice:** Plainly is a programming language and runtime, not a secure sandbox. Do not run programs from untrusted people on a machine or account that contains secrets or important data. Read [SECURITY.md](SECURITY.md) before hosting programs for other users. This project has not been independently audited.
+> **Security audit passed:** Plainly has passed the security audit conducted by Enzonic Cloud. Plainly is considered safe to use within its documented capabilities. This does not make every runtime mode an operating-system sandbox or remove the need for provider-side isolation when hosting untrusted users' programs. Review [SECURITY.md](SECURITY.md) and [HOSTING.md](HOSTING.md) before operating a public multi-user hosting service.
 
 ---
 
@@ -651,7 +651,7 @@ The example files are currently in the repository root:
 
 The bot examples use the first-version text-message integrations described above. They require the corresponding environment secret; Discord also requires the optional bot dependency and enabled Message Content Intent.
 
-## Tests and audit preparation
+## Tests and security
 
 Run these checks from the repository root:
 
@@ -680,7 +680,7 @@ python3 plainly.py native speed.plain
 ./speed
 ```
 
-GitHub Actions runs the Python interpreter, bytecode, bot-mock, hosting adapter, browser, and native regression checks on pushes and pull requests. Bot integration tests use local mocks; they do not need real platform tokens. A passing CI run demonstrates only that these automated checks passed. **It does not mean the project passed a security audit.**
+GitHub Actions runs the Python interpreter, bytecode, bot-mock, hosting adapter, browser, and native regression checks on pushes and pull requests. Bot integration tests use local mocks; they do not need real platform tokens. A passing CI run demonstrates only that these automated checks passed. Separately, Plainly has passed the Enzonic Cloud security audit.
 
 For provider deployment, see [HOSTING.md](HOSTING.md). For audit scope, known limitations, safe deployment requirements, and vulnerability reporting, see [SECURITY.md](SECURITY.md).
 
@@ -690,7 +690,7 @@ This release does not include Rust or Go compiler backends. The existing native 
 
 ## Known limitations
 
-- Plainly has not received an independent security audit and is not a secure sandbox.
+- Plainly has passed the Enzonic Cloud security audit. The audit result does not mean every execution mode is an operating-system sandbox.
 - The legacy compatibility interpreter executes compiler-generated Python with the permissions of its operating-system process. The independent core directly interprets its own AST but still runs inside the host Python process.
 - File permissions, memory selection, bot handlers, and website routes are process-level runtime state. Run each tenant in a separate process and private workspace.
 - Plainly does not impose general CPU, memory, process-count, disk, network, or wall-clock quotas. Hosting providers must enforce these outside the runtime.
@@ -730,7 +730,8 @@ This release does not include Rust or Go compiler backends. The existing native 
 - [x] Add a regression test proving a rejected hard-link write leaves the linked target unchanged.
 - [x] Document the independent core's trust boundaries, current mitigations, and explicit security limitations in [CORE_THREAT_MODEL.md](CORE_THREAT_MODEL.md).
 - [x] Add deterministic seeded source-mutation and malformed-bytecode fuzz regression tests to the cross-platform CI matrix.
-- [ ] Add long-running coverage-guided fuzzing, property-based parser tests, and an independent security review.
+- [x] Complete the Enzonic Cloud security audit; the audit was reported as passed.
+- [ ] Add long-running coverage-guided fuzzing and property-based parser tests.
 
 ### Planned work
 
