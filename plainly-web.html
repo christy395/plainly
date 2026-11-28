@@ -239,7 +239,7 @@ document.getElementById("starters").addEventListener("click",event=>{
  const button=event.target.closest("[data-starter]"); if(!button)return;
  const name=button.dataset.starter; sel.value=name; load(name); run(); ed.focus();
 });
-document.querySelectorAll("[data-insert]").forEach(button=>button.addEventListener("click",()=>{
+if(document.querySelectorAll)document.querySelectorAll("[data-insert]").forEach(button=>button.addEventListener("click",()=>{
  const snippet=button.dataset.insert; const start=ed.selectionStart,end=ed.selectionEnd;
  ed.value=ed.value.slice(0,start)+snippet+"\n"+ed.value.slice(end);
  ed.focus(); ed.selectionStart=ed.selectionEnd=start+snippet.length+1;
