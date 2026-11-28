@@ -15,7 +15,7 @@ This document specifies the independent Plainly core interpreter introduced in 1
 
 A source file uses UTF-8 and the .plain extension. Each statement occupies one line. A hash (#) begins a comment outside a quoted string. A note line is ignored by the interpreter and can be used for a human-readable note.
 
-Names currently use ASCII letters, digits, and underscores, and must begin with a letter or underscore. Names are case-sensitive. Multi-word names are not yet supported in the independent core.
+Names use ASCII letters, digits, and underscores, and must begin with a letter or underscore. Names are case-sensitive and may contain up to six words separated by single spaces. Reserved language words and operators cannot be part of a variable name. For example, `player score` is valid.
 
 ## Statements
 
@@ -25,17 +25,20 @@ Declare a value once:
 let score be 10
 ~~~
 
-Change an existing value:
+Change an existing value. Variable names can use spaces:
 
 ~~~plain
-set score to score plus 5
+let player score be 10
+set player score to player score plus 5
+say player score
 ~~~
 
-Display a value:
+Display a value with `say`, `show`, `display`, or `print`:
 
 ~~~plain
 say score
-say "Hello from Plainly"
+show "Hello from Plainly"
+display "This also works"
 ~~~
 
 Choose a branch:
@@ -64,7 +67,7 @@ say "Hello"
 end repeat
 ~~~
 
-Declarations currently use one program-wide variable environment. Declare loop variables before a loop and update them with set.
+Declarations currently use one program-wide variable environment. Declare loop variables before a loop and update them with set. The words `say`, `show`, `display`, and `print` are equivalent output statements.
 
 ## Values and expressions
 
