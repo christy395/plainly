@@ -18,15 +18,15 @@ class CoreBytecodeTests(unittest.TestCase):
 
     def test_multi_word_names_and_output_aliases(self):
         source = (
-            "let player score be 10\\n"
-            "set player score to player score plus 5\\n"
-            "display player score\\n"
+            "let player score be 10\n"
+            "set player score to player score plus 5\n"
+            "display player score\n"
         )
-        self.assertBothBackends(source, "15\\n")
+        self.assertBothBackends(source, "15\n")
         program = bytecode.compile_source(source)
         self.assertEqual(
             bytecode.VirtualMachine().run(bytecode.loads(bytecode.dumps(program))),
-            "15\\n",
+            "15\n",
         )
 
     def test_if_and_otherwise(self):
