@@ -176,7 +176,7 @@ def _validate_program(program):
         if len(item) != expected:
             raise CoreBytecodeError("invalid operands for instruction %d" % index)
         if op in ("LOAD", "DECLARE", "STORE"):
-            if not isinstance(item[1], str) or not item[1].isidentifier():
+            if not core.is_valid_name(item[1]):
                 raise CoreBytecodeError("invalid variable name in bytecode")
         if op == "CONST":
             value = item[1]
