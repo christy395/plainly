@@ -47,7 +47,7 @@ end if
 
 The 1.5.0 repository includes the existing 1.4 language implementation and a new independent core preview:
 
-- English-like statements, variables, calculations, comparisons, and yes/no logic.
+- English-like statements, multi-word variable names, calculations, comparisons, and yes/no logic.
 - Lists, records, user-defined functions, loops, and conditional blocks.
 - Type checking before execution, including `maybe` values for values that might be missing.
 - Friendly diagnostics that identify the line with a problem.
@@ -67,7 +67,7 @@ The existing full-featured interpreter and browser editor do not support exactly
 
 Plainly 1.5.0 starts a separate implementation of the language from its foundations. The independent core includes its own tokenizer, parser, abstract syntax tree, and interpreter. Programs executed by this core are not translated into Python, JavaScript, or C.
 
-This first preview supports variables, numbers, text, yes/no values, lists, arithmetic, comparisons, boolean logic, conditions, while loops, repeat loops, and a small set of built-in functions, including safe one-based list access with `at(list, position)`. It includes explicit limits for source size, token count, nesting, variables, aggregate runtime values, text, collections, numeric magnitude, execution steps, and cumulative output. Source files are opened with bounded descriptor-based checks and no-follow behavior where supported. These are defense-in-depth controls, not a secure sandbox.
+This first preview supports multi-word variable names, `say` / `show` / `display` / `print` output statements, numbers, text, yes/no values, lists, arithmetic, comparisons, boolean logic, conditions, while loops, repeat loops, and a small set of built-in functions, including safe one-based list access with `at(list, position)`. It includes explicit limits for source size, token count, nesting, variables, aggregate runtime values, text, collections, numeric magnitude, execution steps, and cumulative output. Source files are opened with bounded descriptor-based checks and no-follow behavior where supported. These are defense-in-depth controls, not a secure sandbox.
 
 Try it:
 
@@ -250,7 +250,7 @@ A Plainly program is a sequence of sentences. Put one statement on each line.
 
 1. A line beginning with `note` is a comment.
 2. Blocks are closed with `end` and the block name: `end if`, `end while`, `end repeat`, `end for`, or `end define`.
-3. Names can contain multiple words. The current limit is six words.
+3. Names can contain multiple words. The current limit is six words in the legacy language and the independent core.
 4. Plainly avoids punctuation in program syntax. Use words such as `plus`, `minus`, `times`, and `divided by`.
 5. Put literal text after `the words`. Use `end words` when more of the sentence follows and the end of the text would otherwise be unclear.
 6. Symbols such as quotes, brackets, parentheses, colons, semicolons, and underscores are allowed inside text, but not in normal program syntax.
@@ -738,6 +738,7 @@ This release does not include Rust or Go compiler backends. The existing native 
 - [x] Add an independent AST-to-bytecode compiler and bounded stack virtual machine for the independent core, with checksummed `.core.pbc` files and no Python AST or generated-Python execution.
 - [x] Expose `core-compile` and `core-execute` commands for independent core bytecode.
 - [x] Add differential tests comparing independent interpreter and VM behavior, plus malformed/tampered bytecode and execution-budget tests.
+- [x] Add multi-word variable names (up to six words) and beginner-friendly `show` / `display` / `print` aliases to the independent core, with interpreter and bytecode regression coverage.
 - [ ] Add static type checking, functions, records, modules, packages, error handling, and a versioned standard library to the independent core.
 - [ ] Create a browser compilation target using WebAssembly, with Plainly-owned browser APIs and no user-authored JavaScript requirement.
 - [ ] Build Plainly's full frontend system for page structure, styling, browser events, accessibility, and component composition. The browser editor now has beginner starters, searchable lessons, and insertable syntax examples.
